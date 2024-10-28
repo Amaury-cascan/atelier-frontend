@@ -1,0 +1,33 @@
+@import './base.css';
+
+ul {
+  list-style: none;
+}
+body{
+  background-color: var(--beige);
+}
+a {
+  text-decoration: none;
+}
+
+.p-datepicker-panel {
+  background-color: var(--beige) !important;
+  color: var(--taupe) !important;
+  border: 1px solid var(--taupe) !important;
+  border-radius: 5px !important;
+  padding: 10px !important;
+}
+
+.p-select-overlay {
+  background-color: var(--beige) !important;
+  color: var(--taupe) !important;
+  border: 1px solid var(--taupe) !important;
+  border-radius: 5px !important;
+  padding: 10px !important;
+}
+
+@media (min-width: 500px) {
+  body {
+    background-color: white;
+  }
+}
