@@ -50,65 +50,27 @@ export const useAuthStore = defineStore('auth', {
             try {
                 const response = await axios.post(`https://127.0.0.1:8000/api/login_check`, credentials, { withCredentials: true });
 
-                // Stockage du token
                 this.token = response.data.token;
                 localStorage.setItem('token', this.token);
-                console.log(this.token);
 
-                // Récupération des détails de l'utilisateur
+                // Récupération des détails de l'utilisateur avec le token JWT
                 const userResponse = await axios.get(`https://127.0.0.1:8000/api/me`, {
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`
-                    }
+                    headers: { Authorization: `Bearer ${this.token}` }
                 });
-                // Création d'un objet utilisateur sans le mot de passe
+
                 const user = {
                     id: userResponse.data.id,
                     name: userResponse.data.name,
                     firstName: userResponse.data.firstName,
                     email: userResponse.data.email,
-                    userIdentifier: userResponse.data.userIdentifier,
-                    roles: userResponse.data.roles
+                    roles: userResponse.data.roles,
                 };
 
-                // Stockage de l'utilisateur dans localStorage
                 localStorage.setItem('user', JSON.stringify(user));
-
-                // Mise à jour de l'état de l'application si nécessaire
                 this.user = user;
-
                 return true;
             } catch (error: any) {
-                if (axios.isAxiosError(error)) {
-                    // Gestion des erreurs spécifiques à Axios
-                    if (error.response) {
-                        switch (error.response.status) {
-                            case 400:
-                            case 401:
-                            case 404:
-                                this.error = 'Données d\'identification invalides. Vérifiez votre email et mot de passe.';
-                                break;
-                            case 403:
-                                this.error = 'Accès interdit. Vous n\'avez pas les autorisations nécessaires.';
-                                break;
-                            case 500:
-                                this.error = 'Erreur interne du serveur. Veuillez réessayer plus tard.';
-                                break;
-                            default:
-                                this.error = `Erreur ${error.response.status}: ${error.response.data.message || 'Une erreur est survenue.'}`;
-                                break;
-                        }
-                    } else if (error.request) {
-                        // La requête a été faite mais aucune réponse n'a été reçue
-                        this.error = 'Pas de réponse du serveur. Vérifiez votre connexion Internet.';
-                    } else {
-                        // Quelque chose s'est mal passé lors de la configuration de la requête
-                        this.error = 'Erreur lors de la configuration de la requête.';
-                    }
-                } else {
-                    // Erreur non spécifique à Axios
-                    this.error = 'Erreur inconnue.';
-                }
+                this.error = 'Identifiants incorrects ou problème d\'authentification.';
                 throw error;
             } finally {
                 this.loading = false;

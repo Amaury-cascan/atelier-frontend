@@ -4,7 +4,7 @@
     <div v-if="service">
       <div class="infos-div">
         <div class="picture">
-          <img :src="'https://localhost:8000/images/service/' + service.picture" alt="Service image" />
+          <img :src="'https://127.0.0.1:8000/images/service/' + service.picture" alt="Service image" />
         </div>
         <h2>{{ service.name }}</h2>
         <p>{{ service.description }}</p>
@@ -81,7 +81,7 @@ const appointments = ref([]);
 // Fonction pour récupérer les rendez-vous existants via l'API
 const fetchAppointments = async () => {
   try {
-    const response = await axios.get(`https://localhost:8000/api/appointment/list`);
+    const response = await axios.get(`https://127.0.0.1:8000/api/appointment/list`);
     appointments.value = response.data.appointments;
   } catch (error) {
     console.error('Erreur lors de la récupération des rendez-vous :', error);

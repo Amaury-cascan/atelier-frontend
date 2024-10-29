@@ -1,11 +1,12 @@
 // services/api.js
 import axios from 'axios';
 
-const axiosInstance = axios.create({
-    baseURL: 'https://127.0.0.1:8000/api/',  // URL de base pour votre API
+const axiosInstance= axios.create({
+    baseURL: `https://127.0.0.1:8000/api/`,
     headers: {
-        'Authorization': 'Bearer your-token',  // Ajoutez l'autorisation si nécessaire
+        'Content-Type': 'application/json',
     },
+    withCredentials: true
 });
 
 axiosInstance.interceptors.request.use(

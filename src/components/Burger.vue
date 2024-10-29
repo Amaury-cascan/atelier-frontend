@@ -13,28 +13,19 @@
     </Button>
 
     <!-- Menu Burger -->
-    <Menu
-        ref="menu"
-        id="overlay_menu"
-        :model="items"
-        :popup="true"
-    >
+    <Menu ref="menu" id="overlay_menu" :model="menuItems" :popup="true">
       <template #item="{ item }">
-        <div
-            class="menu-item"
-            @click="handleItemClick($event, item)"
-        >
+        <div class="menu-item" @click="handleItemClick($event, item)">
           {{ item.label }}
-
-          <!-- Affiche la sous-liste des prestations si l'élément "PRESTATIONS" est cliqué -->
+          <!-- Sous-menu pour PRESTATIONS -->
           <div v-if="item.label === 'PRESTATIONS' && showSubMenu" class="submenu">
             <div
                 v-for="prest in prestations"
-            :key="prest.id"
-            class="menu-subitem"
-            @click.stop="navigateTo(prest.label)"
+                :key="prest.id"
+                class="menu-subitem"
+                @click.stop="navigateTo(prest.id)"
             >
-            {{ prest.name }}
+              {{ prest.name }}
             </div>
           </div>
         </div>
@@ -44,16 +35,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router'; // Import Vue Router
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import Menu from 'primevue/menu';
 import Button from 'primevue/button';
 import 'primeicons/primeicons.css';
-import { useCategoryStore } from "@/stores/entityStore"; // Assurez-vous que le chemin est correct
+import { useCategoryStore } from "@/stores/entityStore";
 
+const router = useRouter();
+const menu = ref<any>(null);
+const showSubMenu = ref(false);
 const categorieStore = useCategoryStore();
+const prestations = ref([]); // Liste des prestations
 const loading = ref(false);
-const prestations = ref([]); // Initialisez les prestations comme un tableau vide
 
 // Fonction exécutée lors de l'initialisation du composant (onMounted)
 onMounted(async () => {
@@ -68,23 +62,18 @@ onMounted(async () => {
   }
 });
 
-// Référence au menu
-const menu = ref<any>(null);
 
-// Variable pour gérer l'affichage de la sous-liste
-const showSubMenu = ref(false);
+// Détermine si l'utilisateur est connecté
+const isAuthenticated = computed(() => !!localStorage.getItem('token'));
 
 // Définition des éléments du menu
-const items = ref([
+const menuItems = ref([
   { label: 'INSTITUT' },
   { label: 'PRESTATIONS' },
-  { label: 'PHOTOS' },
-  { label: 'RESERVATIONS' },
-  { label: 'MON PROFIL / CONNEXION' },
+  { label: 'MES RESERVATIONS' },
+  { label: isAuthenticated.value ? 'DECONNEXION' : 'CONNEXION' }
 ]);
 
-// Initialisation de Vue Router
-const router = useRouter();
 
 // Toggle du menu
 const toggle = (event: MouseEvent) => {
@@ -92,6 +81,7 @@ const toggle = (event: MouseEvent) => {
     menu.value.toggle(event);
   }
 };
+
 
 // Gestion des clics sur les items
 const handleItemClick = (event: MouseEvent, item: { label: string }) => {
@@ -101,7 +91,7 @@ const handleItemClick = (event: MouseEvent, item: { label: string }) => {
     showSubMenu.value = !showSubMenu.value;
   } else if (item.label === 'INSTITUT') {
     router.push('/'); // Redirection vers la page d'accueil
-  } else if (item.label === 'MON PROFIL / CONNEXION') {
+  } else if (item.label === 'CONNEXION') {
     router.push('/connexion');
   } else {
     showSubMenu.value = false; // Ferme la sous-liste si un autre item est cliqué
@@ -109,9 +99,11 @@ const handleItemClick = (event: MouseEvent, item: { label: string }) => {
   }
 };
 
+
+
 // Navigation vers une route spécifique
-const navigateTo = (subItem: string) => {
-  router.push('/prestation'); // Redirection vers la route "/prestation"
+const navigateTo = (categoryId: number) => {
+  router.push(`/prestation/${categoryId}`); // Redirige vers la route avec l'ID de la catégorie
 };
 </script>
 

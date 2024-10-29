@@ -1,21 +1,33 @@
 <template>
   <PresentationLayout/>
   <div class="services-container">
-    <div v-for="service in serviceStore.services" :key="service.id" class="service-card">
+    <div
+        v-for="service in filteredServices"
+        :key="service.id"
+        class="service-card"
+    >
       <div class="icon-container">
-        <i class="pi pi-info-circle service-info-icon" @click="openDialog(service)"></i>
+        <i
+            class="pi pi-info-circle service-info-icon"
+            @click="openDialog(service)"
+        ></i>
       </div>
       <div>
         <h2 class="service-name">{{ service.name }}</h2>
       </div>
       <div class="service-content">
         <div class="service-image">
-          <img :src="'https://localhost:8000/images/service/' + service.picture" alt="Service image"  />
+          <img
+              :src="'https://127.0.0.1:8000/images/service/' + service.picture"
+              alt="Service image"
+          />
         </div>
         <div class="service-details">
           <p class="service-price">Prix: {{ service.price }}€</p>
           <p class="service-duration">Durée: {{ service.duration }} min</p>
-          <button @click="handleAppointment(service)" class="btn-appointment">Prendre Rendez-vous</button>
+          <button @click="handleAppointment(service)" class="btn-appointment">
+            Prendre Rendez-vous
+          </button>
         </div>
       </div>
     </div>
@@ -34,27 +46,49 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { onMounted, ref } from 'vue';
+<script setup>
+import { ref, computed, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import PresentationLayout from "@/layout/service/PresentationLayout.vue";
 import Dialog from 'primevue/dialog';
-import { useServiceStore } from "@/stores/entityStore";
-import {useRouter} from "vue-router";
+import { useServiceStore, useCategoryStore } from "@/stores/entityStore";
 
 const router = useRouter();
-const serviceStore = useServiceStore(); // Utilisation du store pour les services
+const route = useRoute();
+const serviceStore = useServiceStore();
+const categoryStore = useCategoryStore();
 const loading = ref(false);
 
-onMounted(async () => {
+const categoryId = computed(() => Number(route.params.id)); // Récupérer l'ID de catégorie depuis l'URL
+
+// Charger les catégories et services, puis filtrer en fonction du nom de la catégorie
+const categoryName = ref(null);
+const filteredServices = ref([]);
+
+const fetchAndFilterServices =  () => {
+  loading.value = true;
   try {
-    loading.value = true; // Activer le loader pendant la récupération des données
-    await serviceStore.fetchEntities(); // Appel à la fonction du store pour fetch les entités
+    // Charger les catégories et services
+     Promise.all([serviceStore.fetchEntities(), categoryStore.fetchEntities()]);
+
+    // Trouver le nom de la catégorie actuelle en fonction de `categoryId`
+    const category = categoryStore.categories.find(cat => cat.id === categoryId.value);
+    categoryName.value = category ? category.name : null;
+
+    // Filtrer les services par nom de catégorie
+    filteredServices.value = serviceStore.services.filter(service => service.category === categoryName.value);
   } catch (error) {
-    console.error("Erreur lors du fetch des entités:", error);
+    console.error("Erreur lors du chargement des données:", error);
   } finally {
-    loading.value = false; // Désactiver le loader après la récupération des données
+    loading.value = false;
   }
-});
+};
+
+// Appeler fetchAndFilterServices initialement pour peupler les services
+fetchAndFilterServices();
+
+// Mettre à jour les services filtrés lorsque `categoryId` change
+watch(categoryId, fetchAndFilterServices);
 
 const dialogVisible = ref(false);
 const selectedService = ref(null);
@@ -69,19 +103,18 @@ const clearSelectedService = () => {
 };
 
 const handleAppointment = (service) => {
-  // Utilisation de $router pour rediriger vers la page de réservation avec le nom du service en paramètre
   router.push({ name: 'reservation', params: { service: service.name } });
 };
 </script>
 
-<style>
+<style scoped>
+/* Votre style CSS reste inchangé */
 .services-container {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
   padding: 20px;
 }
-
 .service-card {
   background-color: var(--beige);
   border-radius: 8px;
@@ -94,9 +127,9 @@ const handleAppointment = (service) => {
   height: 175px;
 }
 .service-content {
+  height: 139px;
   align-items: flex-start;
   display: flex;
-
 }
 .icon-container {
   position: absolute;
@@ -104,41 +137,39 @@ const handleAppointment = (service) => {
   right: 10px;
   cursor: pointer;
 }
-
 .service-info-icon {
   font-size: 24px;
   color: var(--taupe);
 }
 .service-image {
-  width: 150px; /* Largeur fixe de l'image */
-  height: auto; /* Hauteur automatique pour garder le ratio d'aspect */
-  border-bottom-left-radius: 8px; /* Arrondir le bas gauche */
-  overflow: hidden;
+  width: 150px;          /* Largeur du conteneur */
+  height: 100%;          /* Hauteur du conteneur */
+  overflow: hidden;      /* Masque tout débordement */
+  display: flex;
+  align-items: center;   /* Centre verticalement */
+  justify-content: center; /* Centre horizontalement */
 }
-img {
-  width: 100%; /* L'image prend 100% de la largeur du conteneur */
-  height: 100%; /* L'image prend 100% de la hauteur du conteneur */
-  object-fit: contain;
+
+img {   /* Largeur de l'image à 100% du conteneur */
+  height: 100%;          /* Hauteur de l'image à 100% du conteneur */
+  object-fit: cover;   /* Affiche toute l'image en conservant le ratio */
 }
 
 .service-details {
-  padding: 10px; /* Réduit le padding */
+  padding: 10px;
   flex: 1;
 }
-
 .service-name {
   font-size: 1.3em;
   color: var(--taupe);
   margin: 0 0 10px;
-
 }
-
-.service-price, .service-duration {
+.service-price,
+.service-duration {
   font-size: 1.1em;
   color: var(--taupe);
   margin: 5px 0;
 }
-
 .btn-appointment {
   background-color: var(--taupe);
   color: white;
@@ -150,12 +181,9 @@ img {
   box-shadow: 5px 4px 8px rgba(0, 0, 0, 0.1);
   margin-top: 5px;
 }
-
 .btn-appointment:hover {
   background-color: var(--taupe);
 }
-
-
 .custom-dialog .p-dialog-header {
   background-color: var(--taupe);
   margin-inline: auto;
@@ -167,7 +195,6 @@ img {
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
 }
-
 .custom-dialog .p-dialog-content {
   background-color: var(--beige);
   color: var(--taupe);
@@ -179,5 +206,4 @@ img {
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
 }
-
 </style>

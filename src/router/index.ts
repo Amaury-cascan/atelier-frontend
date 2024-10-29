@@ -9,9 +9,10 @@ const router = createRouter({
       component: () => import('../views/HomeView.vue'),
     },
     {
-      path: '/prestation',
+      path: '/prestation/:id(\\d+)', // Vérifie que l'ID est un nombre
       name: 'prestation',
       component: () => import('../views/ServiceView.vue'),
+      props: true, // Passe automatiquement `id` comme prop au composant
     },
     {
       path: '/connexion',

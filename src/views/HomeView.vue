@@ -14,7 +14,7 @@
         <div class="service-item">
           <div class="service-image-container">
             <img
-                :src="'https://localhost:8000/images/service/' + slotProps.data.picture"
+                :src="'https://127.0.0.1:8000/images/service/' + slotProps.data.picture"
                 alt="Service image"
                 class="service-image"
             />
@@ -71,36 +71,37 @@ serviceStore.fetchEntities();
 }
 
 .service-item {
-  padding: 20px;
-  height: 270px;
+  height: 240px;
   border-radius: 10px;
   margin-inline: 5px;
   margin-bottom: 20px;
   text-align: center;
   position: relative;
   background: rgba(245, 223, 198, 0.82);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
+  transition: transform 0.3s ease;
+  overflow: hidden;
 }
 
 .service-item:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transform: scale(1.1);
 }
 
 .service-image-container {
   position: relative;
   width: 100%;
-  height: 23vh;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  height: 20vh;
   overflow: hidden;
 }
 
 .service-image {
   width: 100%;
-  border-radius: 8px;
   object-fit: cover;
+}
+img {
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
 }
 
 .category-badge {
@@ -116,7 +117,7 @@ serviceStore.fetchEntities();
 
 .service-details {
   text-align: center;
-  padding-top: 0;
+  padding-top: 5px;
   padding-bottom: 0;
 }
 
@@ -145,7 +146,7 @@ serviceStore.fetchEntities();
 
 @media (max-width: 600px) {
   .service-item {
-    padding: 10px;
+
   }
 
   .service-name {
