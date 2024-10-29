@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import Menu from 'primevue/menu';
 import Button from 'primevue/button';
@@ -62,18 +62,34 @@ onMounted(async () => {
   }
 });
 
-
 // Détermine si l'utilisateur est connecté
 const isAuthenticated = computed(() => !!localStorage.getItem('token'));
 
-// Définition des éléments du menu
-const menuItems = ref([
-  { label: 'INSTITUT' },
-  { label: 'PRESTATIONS' },
-  { label: 'MES RESERVATIONS' },
-  { label: isAuthenticated.value ? 'DECONNEXION' : 'CONNEXION' }
-]);
+// Fonction pour générer les éléments du menu en fonction de l'état d'authentification
+const getMenuItems = () => {
+  const items = [
+    { label: 'INSTITUT' },
+    { label: 'PRESTATIONS' }
+  ];
 
+  // Ajoutez "MES RESERVATIONS" si l'utilisateur est authentifié
+  if (isAuthenticated.value) {
+    items.push({ label: 'MES RESERVATIONS' });
+    items.push({ label: 'DECONNEXION' });
+  } else {
+    items.push({ label: 'CONNEXION' });
+  }
+
+  return items;
+};
+
+// Définition des éléments du menu
+const menuItems = ref(getMenuItems());
+
+// Watcher sur isAuthenticated pour mettre à jour les éléments du menu
+watch(isAuthenticated, () => {
+  menuItems.value = getMenuItems(); // Met à jour le menuItems en fonction de l'authentification
+});
 
 // Toggle du menu
 const toggle = (event: MouseEvent) => {
@@ -81,7 +97,6 @@ const toggle = (event: MouseEvent) => {
     menu.value.toggle(event);
   }
 };
-
 
 // Gestion des clics sur les items
 const handleItemClick = (event: MouseEvent, item: { label: string }) => {
@@ -92,14 +107,16 @@ const handleItemClick = (event: MouseEvent, item: { label: string }) => {
   } else if (item.label === 'INSTITUT') {
     router.push('/'); // Redirection vers la page d'accueil
   } else if (item.label === 'CONNEXION') {
-    router.push('/connexion');
+    window.location.href = '/connexion';
+  } else if (item.label === 'DECONNEXION') {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/connexion';
   } else {
     showSubMenu.value = false; // Ferme la sous-liste si un autre item est cliqué
     menu.value?.hide(); // Ferme le menu burger après avoir sélectionné un autre item
   }
 };
-
-
 
 // Navigation vers une route spécifique
 const navigateTo = (categoryId: number) => {

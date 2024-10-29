@@ -87,3 +87,26 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+.custom-dialog .p-dialog-header {
+  background-color: var(--taupe) !important;
+  margin-inline: auto !important;
+  color: white !important;
+  font-size: 1.2em !important;
+  width: 90vw !important;
+  padding: 15px !important;
+  box-shadow: 10px 10px 8px rgba(0, 0, 0, 0.1) !important;
+  border-top-left-radius: 10px !important;
+  border-top-right-radius: 10px !important;
+}
+
+.custom-dialog .p-dialog-content {
+  background-color: var(--beige) !important;
+  color: var(--taupe) !important;
+  margin-inline: auto !important;
+  width: 90vw !important;
+  font-size: 1.2em !important;
+  box-shadow: 10px 10px 8px rgba(0, 0, 0, 0.1) !important;
+  padding: 15px !important;
+  border-bottom-left-radius: 10px !important;
+  border-bottom-right-radius: 10px !important;
+}

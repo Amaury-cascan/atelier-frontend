@@ -4,10 +4,10 @@
     <h3 class="subtext">Vous avez déjà un compte ?</h3>
     <h3 class="subtext">Identifiez-vous</h3>
     <div class="input-wrapper">
-      <InputText v-model="emailValue" placeholder="Email" />
+      <InputText class="input" v-model="emailValue" placeholder="Email" />
     </div>
     <div class="input-wrapper">
-      <Password v-model="passwordValue" placeholder="Mot de passe" :feedback="false"/>
+      <Password class="input"  v-model="passwordValue" placeholder="Mot de passe" :feedback="false"/>
     </div>
     <div class="button-wrapper">
       <Button class="button" label="Connexion" @click="login" :disabled="loading" />
@@ -46,7 +46,7 @@ const login = async () => {
       username: emailValue.value,
       password: passwordValue.value
     });
-    await router.push({ name: 'home' });
+     window.location.href = '/';
   } catch (err) {
     // Gérer les erreurs
     error.value = 'Erreur de connexion. Veuillez vérifier vos identifiants.';
@@ -77,7 +77,7 @@ const login = async () => {
 
 .input-wrapper {
   margin: 4px 0;
-  width: 70%;
+  width: 90%;
   text-align: center;
   border: solid 1px var(--taupe);
   border-radius: 10px;
@@ -96,5 +96,9 @@ const login = async () => {
   color: red;
   margin-top: 10px;
   text-align: center;
+}
+.input {
+  width: 100%;
+  background-color: var(--beige);
 }
 </style>

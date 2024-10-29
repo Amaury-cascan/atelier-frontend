@@ -41,16 +41,27 @@
           />
         </div>
 
-        <Button label="Confirmer la réservation" icon="pi pi-check" type="submit" class="btn-submit" @click="submitReservation" />
+        <Button label="Confirmer la réservation" icon="pi pi-check" class="btn-submit" @click="submitReservation" />
       </div>
     </div>
     <div v-else>
       <p>Prestation introuvable.</p>
     </div>
+
+    <!-- Modal de confirmation -->
+    <Dialog
+        v-model:visible="showDialog"
+        header="Confirmation"
+        :closable="true"
+        :modal="true"
+        class="custom-dialog"
+    >
+    <p>Réservation confirmée avec succès pour la prestation : {{ service.name }} le {{ reservation.date ? reservation.date.toLocaleDateString() : '' }} à {{ reservation.time }}.</p>
+    </Dialog>
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useServiceStore } from "@/stores/entityStore";
@@ -60,6 +71,7 @@ import axios from 'axios';
 import DatePicker from "primevue/datepicker";
 import Select from "primevue/select";
 import Button from 'primevue/button';
+import Dialog from 'primevue/dialog'; // Importation du composant Dialog
 
 const route = useRoute();
 const serviceName = route.params.service;
@@ -70,13 +82,12 @@ const reservation = ref({
   time: ''
 });
 
-
 const minDate = new Date();
-
 service.value = serviceStore.services.find(s => s.name === serviceName);
 
 const availableTimes = ref([]);
 const appointments = ref([]);
+const showDialog = ref(false); // État de la modal
 
 // Fonction pour récupérer les rendez-vous existants via l'API
 const fetchAppointments = async () => {
@@ -88,28 +99,47 @@ const fetchAppointments = async () => {
   }
 };
 
+
 // Fonction pour mettre à jour les créneaux horaires disponibles
 const updateAvailableTimes = () => {
   const startHour = 10; // Heure de début (10h)
   const endHour = 18;   // Heure de fin (18h)
-  const endMinute = 30; // Minutes à ajouter pour 18h30
+  const endMinute = 30; // Limite à 18h30
   const interval = 30;   // Intervalle de 30 minutes
   let times = [];
   const now = new Date();
-  const isToday = reservation.value.date && reservation.value.date.toDateString() === now.toDateString();
+  const localTimeOffset = now.getTimezoneOffset() * 60000; // Décalage horaire local en millisecondes
 
+  // Récupérer la date sélectionnée au format correct
+  const selectedDate = reservation.value.date;
+
+  // Si aucune date n'est sélectionnée, ne rien faire
+  if (!selectedDate) return;
+
+  // Obtenez la date locale
+  const selectedDateLocal = new Date(selectedDate.getTime() - localTimeOffset);
+
+  // Format de la date sélectionnée
+  const selectedDateString = selectedDateLocal.toISOString().split('T')[0]; // Format 'YYYY-MM-DD'
+
+  // Filtrer les rendez-vous pour la date sélectionnée
+  const appointmentsForSelectedDate = appointments.value.filter(appointment => {
+    const appointmentDate = new Date(appointment.date);
+    return appointmentDate.toISOString().split('T')[0] === selectedDateString;
+  });
+
+  // Vérifier les heures disponibles
   for (let hour = startHour; hour <= endHour; hour++) {
     for (let minute = 0; minute < 60; minute += interval) {
-      // On ne doit pas dépasser 18h30
-      if (hour === endHour && minute > endMinute) break;
+      if (hour === endHour && minute > endMinute) break; // Limite à 18h30
 
-      const time = new Date();
-      time.setHours(hour, minute, 0, 0);
+      const time = new Date(selectedDateLocal);
+      time.setHours(hour, minute, 0, 0); // Utilisation de la date sélectionnée
 
-      // Filtrer les créneaux passés
-      if (!isToday || time > now) {
+      // Vérifiez que l'heure n'est pas dans le passé
+      if (time > now) {
         const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const isSlotTaken = isTimeSlotTaken(reservation.value.date, timeString);
+        const isSlotTaken = isTimeSlotTaken(timeString, appointmentsForSelectedDate);
 
         if (!isSlotTaken) {
           times.push({ label: timeString, value: timeString });
@@ -120,32 +150,84 @@ const updateAvailableTimes = () => {
   availableTimes.value = times;
 };
 
+// Vérifie si un créneau est déjà réservé
+const isTimeSlotTaken = (time, appointmentsForSelectedDate) => {
+  const [hour, minute] = time.split(':').map(Number);
 
-// Fonction pour vérifier si un créneau est déjà réservé
-const isTimeSlotTaken = (selectedDate, time) => {
-  if (!selectedDate) return false;
+  // Créez une date pour l'heure sélectionnée
+  const selectedTimeDate = new Date(reservation.value.date); // Utilisez la date de réservation
+  selectedTimeDate.setHours(hour, minute); // Définir l'heure du créneau
 
-  const selectedDateString = selectedDate.toDateString();
+  const serviceDuration = service.value.duration; // Durée du service en minutes
+  const selectedEndTimeDate = new Date(selectedTimeDate.getTime() + serviceDuration * 60000); // Heure de fin du créneau
 
-  return appointments.value.some(appointment => {
-    const appointmentDate = new Date(appointment.date);
-    return appointmentDate.toDateString() === selectedDateString &&
-        appointmentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) === time;
+  // Vérifiez pour chaque rendez-vous si le créneau horaire est pris
+  return appointmentsForSelectedDate.some(appointment => {
+    const appointmentStart = new Date(appointment.date);
+    const appointmentEnd = new Date(appointment.endDate);
+
+    // Vérifier le chevauchement
+    return (
+        // 1. Le créneau commence pendant un rendez-vous existant
+        (selectedTimeDate >= appointmentStart && selectedTimeDate < appointmentEnd) ||
+        // 2. La fin du créneau sélectionné chevauche le début d'un rendez-vous existant
+        (selectedEndTimeDate > appointmentStart && selectedEndTimeDate <= appointmentEnd) ||
+        // 3. Le créneau commence avant un rendez-vous existant et finit après le début de ce dernier
+        (selectedTimeDate < appointmentEnd && selectedEndTimeDate > appointmentStart)
+    );
   });
 };
 
-fetchAppointments();
 
-const submitReservation = () => {
+
+
+// Soumettre la réservation
+const submitReservation = async () => {
   if (reservation.value.date && reservation.value.time) {
-    alert(`Réservation confirmée pour le service ${serviceName} le ${reservation.value.date.toLocaleDateString()} à ${reservation.value.time}.`);
+    const reservationDateTime = new Date(reservation.value.date);
+    const [hour, minute] = reservation.value.time.split(':').map(Number);
+    reservationDateTime.setHours(hour, minute);
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    const userId = user ? user.id : null;
+
+    if (!userId) {
+      alert('Utilisateur non connecté. Veuillez vous connecter pour effectuer une réservation.');
+      return;
+    }
+
+    const localTimezoneOffset = reservationDateTime.getTimezoneOffset();
+    const utcDateTime = new Date(reservationDateTime.getTime() - localTimezoneOffset * 60000);
+
+    const payload = {
+      date: utcDateTime.toISOString(),
+      serviceId: service.value.id,
+      clientId: userId
+    };
+
+    try {
+      const response = await axios.post('https://127.0.0.1:8000/api/appointment/create', payload);
+      if (response.data.success) {
+        showDialog.value = true;
+        console.log('Réservation réussie:', response.data);
+      } else {
+        alert(response.data.message || 'Une erreur est survenue lors de la réservation.');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la réservation :', error);
+      alert('Une erreur est survenue lors de la réservation.');
+    }
   } else {
     alert('Veuillez choisir une date et une heure pour la réservation.');
   }
 };
+
+// Appel initial pour récupérer les rendez-vous
+fetchAppointments();
 </script>
 
 <style scoped>
+/* Ajoutez ici vos styles existants */
 .reservation-container {
   padding: 20px 0;
   max-width: 800px;
@@ -158,7 +240,6 @@ h1 {
   font-size: 2em;
   color: var(--taupe);
   margin-bottom: 20px;
-  margin-inline: auto;
   text-align: center;
 }
 
@@ -170,6 +251,7 @@ h1 {
   align-items: center;
   margin-bottom: 2vh;
 }
+
 .infos-div p {
   text-align: justify;
   padding-inline: 20px;
@@ -215,70 +297,50 @@ h1 {
   border-radius: 5px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+
 label {
   color: var(--taupe);
 }
+
 .picture {
   width: 100%;
   height: 25vh;
   display: flex;
-  justify-content: center;  /* Centrer horizontalement */
-  align-items: center;      /* Centrer verticalement */
-  overflow: hidden;         /* Masquer tout dépassement de l'image */
-  position: relative;       /* Assure un positionnement relatif pour le centrage */
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
 }
 
 .picture img {
   width: 100%;
-  height: auto;            /* Assure que l'image prenne toute la hauteur sans déformer le ratio */
-  object-fit: contain;      /* Maintient le ratio d'aspect et adapte l'image à la div */
+  height: auto;
+  object-fit: contain;
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);  /* Recentre l'image en fonction de son centre */
+  transform: translate(-50%, -50%);
 }
+
 .form-group {
   padding-inline: 20px;
   margin-bottom: 10px;
 }
 
 .styled-select {
-  width: 100%; /* Full width */
-  padding: 10px; /* Padding for better spacing */
-  font-size: 1.1em; /* Font size */
-  color: var(--taupe); /* Text color */
-  background-color: var(--beige); /* Background color */
-  border: 2px solid var(--taupe); /* Border color */
-  border-radius: 8px; /* Rounded corners */
-  transition: border-color 0.3s ease; /* Smooth transition for border color */
+  width: 100%;
+  font-size: 1.1em;
+  color: var(--taupe);
+  padding: 10px;
+  border-radius: 8px;
+  border: 2px solid var(--taupe);
 }
 
-/* Change border color on focus */
 .styled-select:focus {
-  border-color: var(--taupe); /* Change to a darker color when focused */
-  outline: none; /* Remove the default outline */
+  outline: none;
+  border-color: var(--taupe);
 }
 
-/* Style the dropdown arrow */
-.p-dropdown-trigger {
-  background-color: var(--taupe); /* Dropdown arrow background */
-  border-radius: 0 8px 8px 0; /* Match the select border radius */
-}
 
-/* Adjust the dropdown panel */
-.p-dropdown-panel {
-  border-radius: 8px; /* Match the select border radius */
-  border: 2px solid var(--taupe); /* Match the select border */
-}
 
-/* Additional styling for the items */
-.p-dropdown-item {
-  padding: 10px; /* Padding for dropdown items */
-  color: var(--taupe); /* Item text color */
-}
-
-/* Change background color on hover */
-.p-dropdown-item:hover {
-  background-color: var(--light-taupe); /* Background color on hover */
-}
 </style>
