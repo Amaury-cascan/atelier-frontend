@@ -23,7 +23,12 @@ const router = createRouter({
       path: '/reservation/:service',
       name: 'reservation',
       component: () => import('../views/ReservationView.vue')
-    }
+    },
+    {
+      path: '/inscription',
+      name: 'inscription',
+      component: () => import('../views/SignupView.vue')
+    },
   ]
 })
 

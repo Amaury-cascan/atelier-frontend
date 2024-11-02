@@ -4,7 +4,7 @@
     <div v-if="service">
       <div class="infos-div">
         <div class="picture">
-          <img :src="'https://127.0.0.1:8000/images/service/' + service.picture" alt="Service image" />
+          <img :src="'https://backoffice.atelier-de-marie.com/images/service/' + service.picture" alt="Service image" />
         </div>
         <h2>{{ service.name }}</h2>
         <p>{{ service.description }}</p>
@@ -45,7 +45,7 @@
       </div>
     </div>
     <div v-else>
-      <p>Prestation introuvable.</p>
+      <p>Chargement...</p>
     </div>
 
     <!-- Modal de confirmation -->
@@ -74,7 +74,6 @@ import Button from 'primevue/button';
 import Dialog from 'primevue/dialog'; // Importation du composant Dialog
 
 const route = useRoute();
-const serviceName = route.params.service;
 const serviceStore = useServiceStore();
 const service = ref(null);
 const reservation = ref({
@@ -83,7 +82,18 @@ const reservation = ref({
 });
 
 const minDate = new Date();
-service.value = serviceStore.services.find(s => s.name === serviceName);
+
+const fetchServices = async () => {
+  await serviceStore.fetchEntities(); // Assurez-vous de charger les services d'abord
+  fetchService(); // Puis récupérez le service
+};
+
+const fetchService = () => {
+  const serviceName = route.params.service;
+  service.value = serviceStore.services.find(s => s.name === serviceName);
+
+};
+
 
 const availableTimes = ref([]);
 const appointments = ref([]);
@@ -92,7 +102,7 @@ const showDialog = ref(false); // État de la modal
 // Fonction pour récupérer les rendez-vous existants via l'API
 const fetchAppointments = async () => {
   try {
-    const response = await axios.get(`https://127.0.0.1:8000/api/appointment/list`);
+    const response = await axios.get(`https://backoffice.atelier-de-marie.com/api/appointment/list`);
     appointments.value = response.data.appointments;
   } catch (error) {
     console.error('Erreur lors de la récupération des rendez-vous :', error);
@@ -206,10 +216,9 @@ const submitReservation = async () => {
     };
 
     try {
-      const response = await axios.post('https://127.0.0.1:8000/api/appointment/create', payload);
+      const response = await axios.post('https://backoffice.atelier-de-marie.com/api/appointment/create', payload);
       if (response.data.success) {
         showDialog.value = true;
-        console.log('Réservation réussie:', response.data);
       } else {
         alert(response.data.message || 'Une erreur est survenue lors de la réservation.');
       }
@@ -222,8 +231,10 @@ const submitReservation = async () => {
   }
 };
 
-// Appel initial pour récupérer les rendez-vous
+
+fetchServices();
 fetchAppointments();
+
 </script>
 
 <style scoped>
@@ -303,23 +314,22 @@ label {
 }
 
 .picture {
-  width: 100%;
-  height: 25vh;
+  width: 40vh;
+  height: 35vh;
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  position: relative;
+  border: 2px solid var(--taupe);
+  border-radius: 10px;
+
 }
 
 .picture img {
-  width: 100%;
   height: auto;
-  object-fit: contain;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover;
 }
 
 .form-group {

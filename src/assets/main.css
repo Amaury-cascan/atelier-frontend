@@ -5,9 +5,11 @@ ul {
 }
 body{
   background-color: var(--beige);
+  font-family: 'Montserrat', sans-serif;
 }
 a {
   text-decoration: none;
+  color: inherit;
 }
 
 .p-datepicker-panel {
@@ -25,6 +27,7 @@ a {
   border-radius: 5px !important;
   padding: 10px !important;
 }
+
 
 @media (min-width: 500px) {
   body {

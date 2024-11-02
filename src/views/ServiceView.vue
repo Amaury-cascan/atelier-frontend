@@ -18,7 +18,7 @@
       <div class="service-content">
         <div class="service-image">
           <img
-              :src="'https://127.0.0.1:8000/images/service/' + service.picture"
+              :src="'https://backoffice.atelier-de-marie.com/images/service/' + service.picture"
               alt="Service image"
           />
         </div>
@@ -43,6 +43,22 @@
     >
       <p>{{ selectedService?.description }}</p>
     </Dialog>
+
+    <!-- Dialog pour la connexion/inscription -->
+    <Dialog
+        v-model:visible="authDialogVisible"
+        :modal="true"
+        :closable="true"
+        header="Connexion ou Inscription"
+        @hide="clearAuthDialog"
+        class="custom-dialog"
+    >
+      <p>Vous devez vous connecter ou vous inscrire pour prendre rendez-vous.</p>
+      <div class="button-dialog">
+        <button @click="redirectToLogin" class="btn-appointment">Se connecter</button>
+        <button @click="redirectToSignup" class="btn-appointment">S'inscrire</button>
+      </div>
+    </Dialog>
   </div>
 </template>
 
@@ -51,32 +67,31 @@ import { ref, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import PresentationLayout from "@/layout/service/PresentationLayout.vue";
 import Dialog from 'primevue/dialog';
-import { useServiceStore, useCategoryStore } from "@/stores/entityStore";
+import { useServiceStore, useCategoryStore } from "@/stores/entityStore"; // Importez votre store d'authentification
 
 const router = useRouter();
 const route = useRoute();
 const serviceStore = useServiceStore();
 const categoryStore = useCategoryStore();
+
 const loading = ref(false);
+const categoryId = computed(() => Number(route.params.id));
 
-const categoryId = computed(() => Number(route.params.id)); // Récupérer l'ID de catégorie depuis l'URL
-
-// Charger les catégories et services, puis filtrer en fonction du nom de la catégorie
 const categoryName = ref(null);
 const filteredServices = ref([]);
+const dialogVisible = ref(false);
+const selectedService = ref(null);
+const authDialogVisible = ref(false); // Pour contrôler la visibilité du dialog d'authentification
 
 const fetchAndFilterServices =  () => {
   loading.value = true;
   try {
-    // Charger les catégories et services
-     Promise.all([serviceStore.fetchEntities(), categoryStore.fetchEntities()]);
-
-    // Trouver le nom de la catégorie actuelle en fonction de `categoryId`
-    const category = categoryStore.categories.find(cat => cat.id === categoryId.value);
-    categoryName.value = category ? category.name : null;
-
-    // Filtrer les services par nom de catégorie
-    filteredServices.value = serviceStore.services.filter(service => service.category === categoryName.value);
+    Promise.all([serviceStore.fetchEntities(), categoryStore.fetchEntities()])
+        .then(() => {
+          const category = categoryStore.categories.find(cat => cat.id === categoryId.value);
+          categoryName.value = category ? category.name : null;
+          filteredServices.value = serviceStore.services.filter(service => service.category === categoryName.value);
+        });
   } catch (error) {
     console.error("Erreur lors du chargement des données:", error);
   } finally {
@@ -84,14 +99,9 @@ const fetchAndFilterServices =  () => {
   }
 };
 
-// Appeler fetchAndFilterServices initialement pour peupler les services
+
 fetchAndFilterServices();
-
-// Mettre à jour les services filtrés lorsque `categoryId` change
 watch(categoryId, fetchAndFilterServices);
-
-const dialogVisible = ref(false);
-const selectedService = ref(null);
 
 const openDialog = (service) => {
   selectedService.value = service;
@@ -103,7 +113,28 @@ const clearSelectedService = () => {
 };
 
 const handleAppointment = (service) => {
-  router.push({ name: 'reservation', params: { service: service.name } });
+  const token = localStorage.getItem('token');
+  if (token === null) { // Vérifiez si l'utilisateur est connecté
+    const desiredRoute = { name: 'reservation', params: { service: service.name } };
+    localStorage.setItem('desiredRoute', JSON.stringify(desiredRoute)); // Stockage dans localStorage
+    authDialogVisible.value = true; // Affichez la pop-up d'authentification
+  } else {
+    router.push({ name: 'reservation', params: { service: service.name } });
+  }
+};
+
+const clearAuthDialog = () => {
+  authDialogVisible.value = false;
+};
+
+const redirectToLogin = () => {
+  router.push({ name: 'connexion' });
+  clearAuthDialog();
+};
+
+const redirectToSignup = () => {
+  router.push({ name: 'inscription' });
+  clearAuthDialog();
 };
 </script>
 
@@ -142,17 +173,22 @@ const handleAppointment = (service) => {
   color: var(--taupe);
 }
 .service-image {
-  width: 150px;          /* Largeur du conteneur */
-  height: 100%;          /* Hauteur du conteneur */
-  overflow: hidden;      /* Masque tout débordement */
+  width: 130px;
+  height: 130px;
+  overflow: hidden;
   display: flex;
-  align-items: center;   /* Centre verticalement */
-  justify-content: center; /* Centre horizontalement */
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--taupe);
+  border-radius: 10px;
+  margin-left: 5px;
 }
 
 img {   /* Largeur de l'image à 100% du conteneur */
-  height: 100%;          /* Hauteur de l'image à 100% du conteneur */
-  object-fit: cover;   /* Affiche toute l'image en conservant le ratio */
+  min-width: 100%;
+  min-height: 100%; /* Hauteur de l'image à 100% du conteneur */
+  object-fit: cover;
+
 }
 
 .service-details {
@@ -205,5 +241,23 @@ img {   /* Largeur de l'image à 100% du conteneur */
   padding: 15px;
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
+}
+
+.custom-dialog .p-dialog-content {
+  background-color: var(--beige);
+  color: var(--taupe);
+  margin-inline: auto;
+  width: 90vw;
+  font-size: 1.2em;
+  box-shadow: 10px 10px 8px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+.button-dialog {
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  width: 50%;
 }
 </style>

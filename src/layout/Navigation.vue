@@ -32,11 +32,5 @@ h1 {
   overflow: hidden;
 }
 
-/* Hide the Burger component on screens larger than 500px */
-@media (min-width: 500px) {
-  .burger {
-    display: none;
-  }
 
-}
 </style>

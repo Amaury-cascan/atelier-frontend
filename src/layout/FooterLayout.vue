@@ -11,8 +11,8 @@
       <img src="../assets/logo/1.png" alt="Logo">
     </div>
     <div class="icons">
-      <i class="pi pi-facebook"></i>
-      <i class="pi pi-instagram"></i>
+      <a target="_blank" href="https://www.facebook.com/people/LAtelier-de-Marie/61567138575765/"><i class="pi pi-facebook"></i></a>
+      <a target="_blank" href="https://www.instagram.com/accounts/login/?next=https%3A%2F%2Fwww.instagram.com%2Flatelierdemarie41%2F%3Figsh%3DYnB3dXYwbnVuNTJn&is_from_rle"><i class="pi pi-instagram"></i></a>
     </div>
   </div>
 </template>

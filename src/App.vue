@@ -37,14 +37,8 @@ import FooterLayout from "@/layout/FooterLayout.vue";
   }
 
   @media (min-width: 500px) {
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-bottom: 2px solid var(--taupe);
-    }
     .container-app {
-      width: 70%;
+      width: 378px;
       margin: 0 auto;
       background-color: var(--beige);
       box-shadow: 10px 0 5px gray, -10px 0 5px gray;

@@ -1,7 +1,7 @@
 <template>
   <div v-if="category" class="content">
     <div class="picture">
-      <img :src="'https://127.0.0.1:8000/images/service/' + category.picture" alt="Image de la catégorie">
+      <img :src="'https://backoffice.atelier-de-marie.com/images/service/' + category.picture" alt="Image de la catégorie">
     </div>
     <div class="presentation">
       <h1>{{ category.name }}</h1>
@@ -51,13 +51,18 @@ watch(categoryId, loadCategory);
 .picture {
   border-bottom: 2px solid var(--taupe);
   overflow: hidden;
-  height: 37vh;
+  height: 25vh;
+  display: flex; /* Ajout de cette ligne */
+  align-items: center; /* Centrer verticalement */
+  justify-content: center; /* Centrer horizontalement */
+
 }
 
 img {
-  width: 100%;
   height: auto;
-  object-fit: cover;
+  object-fit: cover; /* Modifiez ici */
+  min-width: 100%; /* Ajoutez cette ligne pour empêcher l'étirement */
+  min-height: 100%; /* Ajoutez cette ligne pour empêcher l'étirement */
 }
 
 .presentation {

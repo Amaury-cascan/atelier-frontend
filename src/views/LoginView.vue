@@ -1,8 +1,6 @@
 <template>
   <div class="container">
-    <h3>Nouveau sur l'appli ?</h3>
-    <h3 class="subtext">Vous avez déjà un compte ?</h3>
-    <h3 class="subtext">Identifiez-vous</h3>
+    <h1>Connexion</h1>
     <div class="input-wrapper">
       <InputText class="input" v-model="emailValue" placeholder="Email" />
     </div>
@@ -13,6 +11,8 @@
       <Button class="button" label="Connexion" @click="login" :disabled="loading" />
     </div>
     <p v-if="error" class="error-message">{{ error }}</p>
+    <p>Pas encore de compte ? <a @click="redirectToLogin">Inscrivez-vous</a></p>
+    <p class="info">Inscrivez-vous pour profiter de la possibilité de prendre des rendez-vous.</p>
   </div>
 </template>
 
@@ -32,6 +32,10 @@ const passwordValue = ref('');
 const authStore = useAuthStore();
 const router = useRouter();
 
+
+const redirectToLogin = () => {
+  router.push({ name: 'inscription' });
+};
 // Variables réactives pour l'état du chargement et les erreurs
 const loading = ref(false);
 const error = ref('');
@@ -46,7 +50,15 @@ const login = async () => {
       username: emailValue.value,
       password: passwordValue.value
     });
-     window.location.href = '/';
+    const storedRoute = localStorage.getItem('desiredRoute');
+    if (storedRoute) {
+      const desiredRoute = JSON.parse(storedRoute); // Récupérez et parsez la route
+      router.push(desiredRoute); // Redirigez vers la route désirée
+      localStorage.removeItem('desiredRoute'); // Supprimez la route de localStorage après utilisation
+    } else {
+      window.location.href = '/'; // Redirigez vers la page d'accueil si aucune route n'est stockée
+    }
+
   } catch (err) {
     // Gérer les erreurs
     error.value = 'Erreur de connexion. Veuillez vérifier vos identifiants.';
@@ -100,5 +112,14 @@ const login = async () => {
 .input {
   width: 100%;
   background-color: var(--beige);
+}
+a {
+  color: var(--taupe);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.info {
+  font-style: italic;
+  font-size: 1vh;
 }
 </style>
