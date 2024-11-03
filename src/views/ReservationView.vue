@@ -18,7 +18,7 @@
               v-model="reservation.date"
               :showIcon="true"
               :minDate="minDate"
-              :disabledDays="[0]"
+              :disabledDays="[0,1]"
               dateFormat="dd/mm/yy"
               class="styled-datepicker"
               showButtonBar
@@ -113,38 +113,50 @@ const fetchAppointments = async () => {
 // Fonction pour mettre à jour les créneaux horaires disponibles
 const updateAvailableTimes = () => {
   const startHour = 10; // Heure de début (10h)
-  const endHour = 18;   // Heure de fin (18h)
-  const endMinute = 30; // Limite à 18h30
-  const interval = 30;   // Intervalle de 30 minutes
+  const interval = 30; // Intervalle de 30 minutes
   let times = [];
   const now = new Date();
-  const localTimeOffset = now.getTimezoneOffset() * 60000; // Décalage horaire local en millisecondes
 
-  // Récupérer la date sélectionnée au format correct
   const selectedDate = reservation.value.date;
-
-  // Si aucune date n'est sélectionnée, ne rien faire
   if (!selectedDate) return;
 
-  // Obtenez la date locale
-  const selectedDateLocal = new Date(selectedDate.getTime() - localTimeOffset);
-
-  // Format de la date sélectionnée
-  const selectedDateString = selectedDateLocal.toISOString().split('T')[0]; // Format 'YYYY-MM-DD'
+  const selectedDateLocal = new Date(selectedDate.getTime() - now.getTimezoneOffset() * 60000);
+  const dayOfWeek = selectedDateLocal.getUTCDay(); // 0 = dimanche, 1 = lundi, ..., 6 = samedi
+  const serviceDuration = service.value.duration; // Durée du service en minutes
 
   // Filtrer les rendez-vous pour la date sélectionnée
+  const selectedDateString = selectedDateLocal.toISOString().split('T')[0];
   const appointmentsForSelectedDate = appointments.value.filter(appointment => {
     const appointmentDate = new Date(appointment.date);
     return appointmentDate.toISOString().split('T')[0] === selectedDateString;
   });
 
-  // Vérifier les heures disponibles
-  for (let hour = startHour; hour <= endHour; hour++) {
+  // Génération des créneaux horaires
+  for (let hour = startHour; hour <= 20; hour++) {
     for (let minute = 0; minute < 60; minute += interval) {
-      if (hour === endHour && minute > endMinute) break; // Limite à 18h30
-
       const time = new Date(selectedDateLocal);
-      time.setHours(hour, minute, 0, 0); // Utilisation de la date sélectionnée
+      time.setHours(hour, minute, 0, 0);
+      const endTime = new Date(time.getTime() + serviceDuration * 60000);
+      // Appliquer les restrictions spécifiques aux jours
+      if (
+          // Mardi, mercredi, jeudi :
+          (dayOfWeek === 2 || dayOfWeek === 3 || dayOfWeek === 4) &&
+
+          // Exclure si le créneau se termine entre 17h00 et 18h3
+          (endTime.getHours() === 17 && endTime.getMinutes() > 0) || // exclut 17h00
+          // Exclure si le créneau se termine entre 17h01 et 18h29
+          (endTime.getHours() === 18 && endTime.getMinutes() < 30) || // exclut de 17h01 à 18h29
+          // Exclure si le créneau se termine après 20h
+          (endTime.getHours() > 20 || (endTime.getHours() === 20 && endTime.getMinutes() > 0))
+         ||
+          // Vendredi : exclure les créneaux dont la fin dépasse 20h
+          (dayOfWeek === 5 && (endTime.getHours() > 20 || (endTime.getHours() === 20 && endTime.getMinutes() > 0))) ||
+
+          // Samedi : exclure les créneaux dont la fin dépasse 15h
+          (dayOfWeek === 6 && (endTime.getHours() > 15 || (endTime.getHours() === 15 && endTime.getMinutes() > 0)))
+      ) {
+        continue; // Exclure ce créneau s'il ne respecte pas les restrictions
+      }
 
       // Vérifiez que l'heure n'est pas dans le passé
       if (time > now) {
@@ -159,6 +171,8 @@ const updateAvailableTimes = () => {
   }
   availableTimes.value = times;
 };
+
+
 
 // Vérifie si un créneau est déjà réservé
 const isTimeSlotTaken = (time, appointmentsForSelectedDate) => {

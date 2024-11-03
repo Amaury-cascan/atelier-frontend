@@ -1,6 +1,6 @@
 <template>
   <div class="picture">
-    <img src="../../assets/pictures/institut.jpg" alt="Image de l'institut">
+    <img src="../../assets/pictures/atelier.png" alt="Image de l'institut">
   </div>
   <div class="presentation">
     <h1>Bienvenue à L'Atelier de Marie</h1>
@@ -28,17 +28,16 @@ const redirectToLogin = () => {
 .picture {
   border-bottom: 2px solid var(--taupe);
   overflow: hidden;
-  height: 25vh;
+  height: 35vh;
   display: flex; /* Ajout de cette ligne */
   align-items: center; /* Centrer verticalement */
   justify-content: center; /* Centrer horizontalement */
 }
 
 img {
-  height: auto;
-  object-fit: cover; /* Modifiez ici */
+  object-fit: contain; /* Modifiez ici */
   min-width: 100%; /* Ajoutez cette ligne pour empêcher l'étirement */
-  min-height: 100%; /* Ajoutez cette ligne pour empêcher l'étirement */
+
 }
 .presentation {
   border-bottom: 2px solid var(--taupe);

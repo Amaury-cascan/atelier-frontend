@@ -93,7 +93,6 @@ export const useAuthStore = defineStore('auth', {
         async forgotPassword(email: string) {
             try {
                 const response = await axios.post(`https://backoffice.atelier-de-marie.com/api/forgot-password`, { email });
-                t
                 return response.data;
             } catch (err) {
                 // Vérifier si la réponse correspond à l'erreur 'unknown_user'

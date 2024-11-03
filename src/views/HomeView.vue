@@ -4,8 +4,8 @@
   <div class="card">
     <Carousel
         :value="serviceStore.services"
-        :numVisible="1"
-        :numScroll="1"
+        :numVisible="2"
+        :numScroll="2"
         :responsiveOptions="responsiveOptions"
         circular
         :autoplayInterval="3000"

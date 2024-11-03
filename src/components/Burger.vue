@@ -74,7 +74,7 @@ const getMenuItems = () => {
 
   // Ajoutez "MES RESERVATIONS" si l'utilisateur est authentifié
   if (isAuthenticated.value) {
-    items.push({ label: 'MES RESERVATIONS' });
+    //items.push({ label: 'MES RESERVATIONS' });
     items.push({ label: 'DECONNEXION' });
   } else {
     items.push({ label: 'CONNEXION' });

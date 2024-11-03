@@ -81,15 +81,15 @@ const register = async () => {
       phoneNumber: phoneNumberValue.value,
     });
     await authStore.signin({ username: emailValue.value, password: passwordValue.value });
-    if (router.currentRoute.value.name === 'login') {
+    const storedRoute = localStorage.getItem('desiredRoute');
+    if (storedRoute) {
       // Redirige vers la page d'accueil
-      window.location.href = '/';
-    } else {
-      const storedRoute = localStorage.getItem('desiredRoute');
       const desiredRoute = JSON.parse(storedRoute); // Récupérez et parsez la route
       router.push(desiredRoute); // Redirigez vers la route désirée
       localStorage.removeItem('desiredRoute'); // Supprimez la route de localStorage après utilisation
-    }
+    } else {
+      window.location.href = '/';
+     }
   } catch (err) {
     error.value = 'Erreur lors de la création du compte. Veuillez réessayer.';
   } finally {

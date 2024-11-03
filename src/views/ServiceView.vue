@@ -155,7 +155,7 @@ const redirectToSignup = () => {
   text-align: left;
   overflow: hidden;
   position: relative;
-  height: 175px;
+  height: 200px;
 }
 .service-content {
   height: 139px;
@@ -199,6 +199,8 @@ img {   /* Largeur de l'image à 100% du conteneur */
   font-size: 1.3em;
   color: var(--taupe);
   margin: 0 0 10px;
+  width: 90%;
+  height: 50px;
 }
 .service-price,
 .service-duration {
