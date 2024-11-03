@@ -17,7 +17,6 @@
               id="date"
               v-model="reservation.date"
               :showIcon="true"
-              :minDate="minDate"
               :disabledDays="[0,1]"
               dateFormat="dd/mm/yy"
               class="styled-datepicker"
@@ -81,7 +80,6 @@ const reservation = ref({
   time: ''
 });
 
-const minDate = new Date();
 
 const fetchServices = async () => {
   await serviceStore.fetchEntities(); // Assurez-vous de charger les services d'abord
@@ -141,14 +139,15 @@ const updateAvailableTimes = () => {
       if (
           // Mardi, mercredi, jeudi :
           (dayOfWeek === 2 || dayOfWeek === 3 || dayOfWeek === 4) &&
-
-          // Exclure si le créneau se termine entre 17h00 et 18h3
-          (endTime.getHours() === 17 && endTime.getMinutes() > 0) || // exclut 17h00
-          // Exclure si le créneau se termine entre 17h01 et 18h29
-          (endTime.getHours() === 18 && endTime.getMinutes() < 30) || // exclut de 17h01 à 18h29
+          // Exclure si le créneau se termine entre 17h00 et 18h30
+          (endTime.getHours() === 17 && endTime.getMinutes() === 30) || // exclut 17h00
+          (endTime.getHours() === 18 && endTime.getMinutes() >= 0) ||
           // Exclure si le créneau se termine après 20h
-          (endTime.getHours() > 20 || (endTime.getHours() === 20 && endTime.getMinutes() > 0))
-         ||
+          (endTime.getHours() > 20) ||
+          (endTime.getHours() === 20 && endTime.getMinutes() === 30) ||
+          time.getHours() === 17 ||
+          (time.getHours() === 18 && time.getMinutes() === 0) ||
+
           // Vendredi : exclure les créneaux dont la fin dépasse 20h
           (dayOfWeek === 5 && (endTime.getHours() > 20 || (endTime.getHours() === 20 && endTime.getMinutes() > 0))) ||
 
@@ -166,6 +165,9 @@ const updateAvailableTimes = () => {
         if (!isSlotTaken) {
           times.push({ label: timeString, value: timeString });
         }
+      }
+      if (times.length === 0) {
+        times.push({ label: 'Plus de rendez-vous disponibles', value: null, disabled: true });
       }
     }
   }
@@ -291,27 +293,6 @@ h1 {
   border: 2px solid var(--taupe);
 }
 
-.custom-datepicker .p-datepicker-header {
-  background-color: var(--taupe);
-  color: white;
-}
-
-.custom-datepicker .p-datepicker-today,
-.custom-datepicker .p-datepicker-current-day {
-  background-color: var(--taupe);
-  color: white;
-  font-weight: bold;
-}
-
-.custom-datepicker .p-datepicker-next,
-.custom-datepicker .p-datepicker-prev {
-  color: white;
-}
-
-.custom-datepicker .p-datepicker-cell:hover {
-  background-color: var(--taupe);
-  color: white;
-}
 
 .btn-submit {
   background-color: var(--taupe);

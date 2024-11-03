@@ -73,6 +73,11 @@ img {
 h1, p {
   text-align: center;
   margin: 0.5em;
+  margin-inline: 2em;
   color: var(--taupe);
+}
+
+.presentation p {
+  text-align: justify;
 }
 </style>

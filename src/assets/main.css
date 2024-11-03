@@ -7,6 +7,9 @@ body{
   background-color: var(--beige);
   font-family: 'Montserrat', sans-serif;
 }
+h1 {
+  font-family: "Bona Nova SC", serif;
+}
 a {
   text-decoration: none;
   color: inherit;
@@ -28,7 +31,37 @@ a {
   padding: 10px !important;
 }
 
+.custom-datepicker .p-datepicker-header {
+  background-color: var(--taupe);
+  color: white;
+}
 
+.custom-datepicker .p-datepicker-today,
+.custom-datepicker .p-datepicker-current-day {
+  background-color: #b17768;
+  border-radius: 10px;
+  color: white;
+  font-weight: bold;
+}
+
+.custom-datepicker .p-datepicker-next,
+.custom-datepicker .p-datepicker-prev {
+  color: white;
+}
+
+.custom-datepicker .p-datepicker-cell:hover {
+  background-color: var(--taupe);
+  color: white;
+}
+.p-disabled {
+  text-decoration: line-through; /* Style rayé */
+
+}
+.p-datepicker-day-cell:hover {
+  background-color: var(--taupe);
+  border-radius: 10px;
+  color: white;
+}
 @media (min-width: 500px) {
   body {
     background-color: white;

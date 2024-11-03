@@ -47,6 +47,7 @@ h1,p{
   text-align: center;
   color: var(--taupe);
   margin-bottom: 0.2rem;
+
 }
 .text {
   width: 90%;

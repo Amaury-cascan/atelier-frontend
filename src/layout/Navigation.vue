@@ -17,10 +17,9 @@ img {
   object-fit: cover;
 }
 h1 {
-  font-size: 2.5em;
   color: #a14b33;
-  font-family: "Tangerine", cursive;
-  font-weight: 700;
+  font-family: "Bona Nova SC", serif;
+
 }
 
 .image-container {
