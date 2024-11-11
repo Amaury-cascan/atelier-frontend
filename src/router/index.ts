@@ -29,6 +29,11 @@ const router = createRouter({
       name: 'inscription',
       component: () => import('../views/SignupView.vue')
     },
+    {
+      path: '/mes-rendez-vous',
+      name: 'rendez-vous',
+      component: () => import('../views/AppointmentView.vue')
+    }
   ]
 })
 

@@ -138,19 +138,21 @@ const updateAvailableTimes = () => {
       // Appliquer les restrictions spécifiques aux jours
       if (
           // Mardi, mercredi, jeudi :
-          (dayOfWeek === 2 || dayOfWeek === 3 || dayOfWeek === 4) &&
-          // Exclure si le créneau se termine entre 17h00 et 18h30
-          (endTime.getHours() === 17 && endTime.getMinutes() === 30) || // exclut 17h00
-          (endTime.getHours() === 18 && endTime.getMinutes() >= 0) ||
-          // Exclure si le créneau se termine après 20h
-          (endTime.getHours() > 20) ||
-          (endTime.getHours() === 20 && endTime.getMinutes() === 30) ||
-          time.getHours() === 17 ||
-          (time.getHours() === 18 && time.getMinutes() === 0) ||
-
+          ((dayOfWeek === 2 || dayOfWeek === 3 || dayOfWeek === 4) && (endTime.getHours() === 17 && endTime.getMinutes() > 0))
+          ||
+          ((dayOfWeek === 2 || dayOfWeek === 3 || dayOfWeek === 4) && (endTime.getHours() === 18 && endTime.getMinutes() >= 0))
+          ||
+          ((dayOfWeek === 2 || dayOfWeek === 3 || dayOfWeek === 4) && (endTime.getHours() > 20))
+          ||
+          ((dayOfWeek === 2 || dayOfWeek === 3 || dayOfWeek === 4) && (endTime.getHours() === 20 && endTime.getMinutes() > 0))
+          ||
+          ((dayOfWeek === 2 || dayOfWeek === 3 || dayOfWeek === 4) && time.getHours() === 17)
+          ||
+          ((dayOfWeek === 2 || dayOfWeek === 3 || dayOfWeek === 4) && (time.getHours() === 18 && time.getMinutes() === 0))
+          ||
           // Vendredi : exclure les créneaux dont la fin dépasse 20h
-          (dayOfWeek === 5 && (endTime.getHours() > 20 || (endTime.getHours() === 20 && endTime.getMinutes() > 0))) ||
-
+          (dayOfWeek === 5 && (endTime.getHours() > 20 || (endTime.getHours() === 20 && endTime.getMinutes() > 0)))
+          ||
           // Samedi : exclure les créneaux dont la fin dépasse 15h
           (dayOfWeek === 6 && (endTime.getHours() > 15 || (endTime.getHours() === 15 && endTime.getMinutes() > 0)))
       ) {

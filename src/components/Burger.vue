@@ -74,7 +74,7 @@ const getMenuItems = () => {
 
   // Ajoutez "MES RESERVATIONS" si l'utilisateur est authentifié
   if (isAuthenticated.value) {
-    //items.push({ label: 'MES RESERVATIONS' });
+    items.push({ label: 'MES RENDEZ-VOUS' });
     items.push({ label: 'DECONNEXION' });
   } else {
     items.push({ label: 'CONNEXION' });
@@ -106,6 +106,10 @@ const handleItemClick = (event: MouseEvent, item: { label: string }) => {
     showSubMenu.value = !showSubMenu.value;
   } else if (item.label === 'INSTITUT') {
     router.push('/'); // Redirection vers la page d'accueil
+  } else if (item.label === 'MES RENDEZ-VOUS') {
+  if (isAuthenticated.value) {
+    router.push('/mes-rendez-vous');
+  }
   } else if (item.label === 'CONNEXION') {
     window.location.href = '/connexion';
   } else if (item.label === 'DECONNEXION') {

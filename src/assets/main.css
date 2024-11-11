@@ -67,3 +67,23 @@ a {
     background-color: white;
   }
 }
+.p-datatable .p-datatable-tbody > tr > td {
+  padding: 0.75rem; /* Adapté pour les appareils mobiles */
+}
+
+.p-datatable-sm .p-datatable-thead > tr > th {
+  color: var(--taupe);
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.p-datatable-sm .p-datatable-tbody > tr > td {
+  font-size: 0.9rem;
+  color: var(--taupe);
+  background: rgba(245, 223, 198, 0.82);
+  border-bottom: 1px solid var(--taupe);
+}
+
+.p-datatable-sm .p-column-title {
+  display: none;
+}

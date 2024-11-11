@@ -3,7 +3,7 @@
   <PresentationLayout />
   <div class="card">
     <Carousel
-        :value="serviceStore.services"
+        :value="services"
         :numVisible="2"
         :numScroll="2"
         :responsiveOptions="responsiveOptions"
@@ -54,13 +54,17 @@ import Carousel from "primevue/carousel";
 import { useServiceStore } from "@/stores/entityStore"; // Importez votre store
 import { useRouter } from 'vue-router';
 import Dialog from "primevue/dialog";
-import {ref} from "vue";
+import {ref, onMounted } from "vue";
+import { computed } from "vue";
 const router = useRouter();
 
 const authDialogVisible = ref(false);
 
 
+
 const serviceStore = useServiceStore(); // Instanciez le store pour les services
+
+const services = computed(() => serviceStore.services);
 const responsiveOptions = [
   {
     breakpoint: '1024px',
@@ -104,9 +108,9 @@ const redirectToSignup = () => {
   clearAuthDialog();
 };
 
-serviceStore.fetchEntities();
-
-
+onMounted(async () => {
+  await serviceStore.fetchEntities();
+});
 
 </script>
 
@@ -118,7 +122,7 @@ serviceStore.fetchEntities();
 }
 
 .service-item {
-  height: 240px;
+  height: 250px;
   border-radius: 10px;
   margin-inline: 5px;
   margin-bottom: 20px;
@@ -132,7 +136,7 @@ serviceStore.fetchEntities();
 .service-image-container {
   position: relative;
   width: 100%;
-  height: 20vh;
+  height: 160px;
   overflow: hidden;
   border-bottom: 2px solid var(--taupe);
 }
