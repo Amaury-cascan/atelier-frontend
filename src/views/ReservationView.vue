@@ -55,14 +55,16 @@
         :modal="true"
         class="custom-dialog"
     >
-    <p>Réservation confirmée avec succès pour la prestation : {{ service.name }} le {{ reservation.date ? reservation.date.toLocaleDateString() : '' }} à {{ reservation.time }}.</p>
+      <p>Réservation confirmée avec succès pour la prestation : {{ service.name }} le {{ reservation.date ? reservation.date.toLocaleDateString() : '' }} à {{ reservation.time }}.</p>
+      <br>
+      <p>Un email de confirmation vient de vous être envoyé. Nous vous invitons à vérifier votre boîte mail, y compris les courriers indésirables (spam), pour vous assurer de l’avoir bien reçu.</p>
     </Dialog>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useServiceStore } from "@/stores/entityStore";
 import axios from 'axios';
 
@@ -70,9 +72,11 @@ import axios from 'axios';
 import DatePicker from "primevue/datepicker";
 import Select from "primevue/select";
 import Button from 'primevue/button';
-import Dialog from 'primevue/dialog'; // Importation du composant Dialog
+import Dialog from 'primevue/dialog';
+
 
 const route = useRoute();
+const router = useRouter();
 const serviceStore = useServiceStore();
 const service = ref(null);
 const reservation = ref({
@@ -236,7 +240,12 @@ const submitReservation = async () => {
     try {
       const response = await axios.post('https://backoffice.atelier-de-marie.com/api/appointment/create', payload);
       if (response.data.success) {
-        showDialog.value = true;
+        showDialog.value = true; // Affiche le Dialog de confirmation
+        // Attendre 3 secondes avant de changer de route
+        setTimeout(() => {
+          showDialog.value = false; // Ferme le Dialog
+          router.push('/mes-rendez-vous'); // Redirection vers la page des rendez-vous
+        }, 10000); // Délai de 10 secondes
       } else {
         alert(response.data.message || 'Une erreur est survenue lors de la réservation.');
       }
