@@ -22,6 +22,7 @@ export const createGenericStore = (storeName: string, entityName: string, apiUrl
                     } else {
                         this[entityName] = [];
                     }
+                    return response.data;
                 } catch (error) {
                     console.error(`Erreur lors de la récupération des ${entityName}`, error);
                     this.error = error;

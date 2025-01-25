@@ -12,3 +12,9 @@ export const useServiceStore = createGenericStore(
     'services',
     'services/'
 )
+
+export const usePhotoStore = createGenericStore(
+    'photoStore',
+    'photos',
+    'picture-presentation/'
+)

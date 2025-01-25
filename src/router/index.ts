@@ -33,6 +33,11 @@ const router = createRouter({
       path: '/mes-rendez-vous',
       name: 'rendez-vous',
       component: () => import('../views/AppointmentView.vue')
+    },
+    {
+      path: '/photos',
+      name: 'photos',
+      component: () => import('../views/PhotosView.vue')
     }
   ]
 })

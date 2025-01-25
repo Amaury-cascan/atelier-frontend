@@ -55,16 +55,21 @@ import { useServiceStore } from "@/stores/entityStore"; // Importez votre store
 import { useRouter } from 'vue-router';
 import Dialog from "primevue/dialog";
 import {ref, onMounted } from "vue";
-import { computed } from "vue";
 const router = useRouter();
 
+interface Service {
+  id: number;
+  name: string;
+  price: number;
+  duration: number;
+  picture: string;
+  category: string;
+}
+
 const authDialogVisible = ref(false);
-
-
-
 const serviceStore = useServiceStore(); // Instanciez le store pour les services
 
-const services = computed(() => serviceStore.services);
+const services = ref<Service[]>([]);
 const responsiveOptions = [
   {
     breakpoint: '1024px',
@@ -86,11 +91,11 @@ const responsiveOptions = [
 const handleAppointment = (service: string) => {
   const token = localStorage.getItem('token');
   if (token === null) { // Vérifiez si l'utilisateur est connecté
-    const desiredRoute = { name: 'reservation', params: { service: service.name } };
+    const desiredRoute = { name: 'reservation', params: { service: service.value.name } };
     localStorage.setItem('desiredRoute', JSON.stringify(desiredRoute)); // Stockage dans localStorage
     authDialogVisible.value = true; // Affichez la pop-up d'authentification
   } else {
-    router.push({ name: 'reservation', params: { service: service.name } });
+    router.push({ name: 'reservation', params: { service: service.value.name } });
   }
 };
 
@@ -109,7 +114,10 @@ const redirectToSignup = () => {
 };
 
 onMounted(async () => {
-  await serviceStore.fetchEntities();
+  const allServices = await serviceStore.fetchEntities();
+
+  services.value = allServices.filter((service: any) => service.price > 0);
+
 });
 
 </script>

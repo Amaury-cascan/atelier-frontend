@@ -53,8 +53,7 @@ const loading = ref(false);
 onMounted(async () => {
   try {
     loading.value = true; // Activer le loader pendant la récupération des données
-    await categorieStore.fetchEntities(); // Appel à la fonction du store pour fetch les entités
-    prestations.value = categorieStore.categories; // Récupérer les catégories du store
+    prestations.value = await categorieStore.fetchEntities(); // Appel à la fonction du store pour fetch les entités
   } catch (error) {
     console.error("Erreur lors du fetch des entités:", error);
   } finally {
@@ -69,7 +68,8 @@ const isAuthenticated = computed(() => !!localStorage.getItem('token'));
 const getMenuItems = () => {
   const items = [
     { label: 'INSTITUT' },
-    { label: 'PRESTATIONS' }
+    { label: 'PRESTATIONS' },
+    {label: 'PHOTOS'}
   ];
 
   // Ajoutez "MES RESERVATIONS" si l'utilisateur est authentifié
@@ -106,7 +106,10 @@ const handleItemClick = (event: MouseEvent, item: { label: string }) => {
     showSubMenu.value = !showSubMenu.value;
   } else if (item.label === 'INSTITUT') {
     router.push('/'); // Redirection vers la page d'accueil
-  } else if (item.label === 'MES RENDEZ-VOUS') {
+  } else if (item.label === 'PHOTOS') {
+    router.push('/photos');
+  }
+  else if (item.label === 'MES RENDEZ-VOUS') {
   if (isAuthenticated.value) {
     router.push('/mes-rendez-vous');
   }
