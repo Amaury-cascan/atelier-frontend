@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "noEmitOnError": false
+    "noEmitOnError": false,
+    "forceConsistentCasingInFileNames": true
   },
   "files": [],
   "references": [

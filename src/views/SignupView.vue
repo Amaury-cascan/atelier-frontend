@@ -109,6 +109,7 @@ const register = async () => {
   max-width: 400px;
   width: 100%;
   box-sizing: border-box;
+  margin-inline: auto;
 }
 
 .input-wrapper {

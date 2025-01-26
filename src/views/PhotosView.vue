@@ -1,11 +1,12 @@
 <template>
   <h1>Galerie de photos</h1>
-  <div class="content-container">
+  <div class="content-container" v-if="isLoading === false">
     <div
         v-for="p in visiblePhotos"
         :key="p.id"
         class="img-container"
         @click="showImage(p)"
+
     >
       <img
           :src="'https://backoffice.atelier-de-marie.com/images/service/' + p.picture"
@@ -46,9 +47,10 @@ interface Photo {
 
 const photos = ref<Photo[]>([]); // Liste des photos initiales
 const visiblePhotos = ref<Photo[]>([]); // Photos visibles
-const photosPerPage = 4; // Nombre de photos chargées par lot
+const photosPerPage = 8; // Nombre de photos chargées par lot
 const currentPage = ref(0); // Page actuelle pour le chargement
 const loading = ref(false); // État de chargement
+const isLoading = ref(false);
 
 const photoStore = usePhotoStore(); // Instanciation du store
 
@@ -76,7 +78,6 @@ const loadPhotos = async () => {
   // Calcule les indices des photos à charger
   const start = currentPage.value * photosPerPage;
   const end = start + photosPerPage;
-
   // Ajoute les nouvelles photos à la liste visible
   visiblePhotos.value.push(...photos.value.slice(start, end));
 
@@ -96,10 +97,21 @@ const handleScroll = () => {
 
 // Initialisation des photos et de l'écoute du défilement
 onMounted(async () => {
-  photos.value = await photoStore.fetchEntities(); // Récupère toutes les photos
-  loadPhotos(); // Charge le premier lot de photos
+  isLoading.value = true;
+  try {
+    const allPictures = await photoStore.fetchEntities(); // Récupère toutes les photos
+    photos.value = allPictures.sort((a, b) => b.id - a.id);
+    await loadPhotos(); // Charge le premier lot de photos
+    window.addEventListener("scroll", handleScroll);
+    isLoading.value = false;
+  } catch (error) {
+    console.error("Erreur lors du chargement des photos:", error);
+  } finally {
+    isLoading.value = false;
+  }
 
-  window.addEventListener("scroll", handleScroll);
+
+
 });
 
 // Nettoyage
@@ -121,6 +133,7 @@ h1{
   flex-wrap: wrap;
   justify-content: space-around;
   width: 100%;
+  margin-inline: auto;
 }
 .img-container {
   margin: 0.5vh 0;
@@ -206,6 +219,19 @@ h1{
   padding: 5px 10px;
   border-radius: 25px;
   cursor: pointer;
+}
+
+@media (min-width: 500px) {
+  .img-container {
+    width: 23%;
+    height: 40vh;
+  }
+  .content-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    width: 90%;
+  }
 }
 </style>
 

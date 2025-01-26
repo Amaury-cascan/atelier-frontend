@@ -94,7 +94,7 @@ body {
   font-size: 1.2em !important;
   width: 90vw !important;
   padding: 15px !important;
-  box-shadow: 10px 10px 8px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px !important;
   border-top-left-radius: 10px !important;
   border-top-right-radius: 10px !important;
 }
@@ -105,7 +105,7 @@ body {
   margin-inline: auto !important;
   width: 90vw !important;
   font-size: 1.2em !important;
-  box-shadow: 10px 10px 8px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px!important;
   padding: 15px !important;
   border-bottom-left-radius: 10px !important;
   border-bottom-right-radius: 10px !important;

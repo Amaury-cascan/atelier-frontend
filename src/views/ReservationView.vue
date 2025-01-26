@@ -1,16 +1,18 @@
 <template>
   <div class="reservation-container">
     <h1>Réservation</h1>
-    <div v-if="service">
-      <div class="infos-div">
+    <div v-if="service" class="infos-div">
+      <div class="content-div">
         <div class="picture">
           <img :src="'https://backoffice.atelier-de-marie.com/images/service/' + service.picture" alt="Service image" />
         </div>
-        <h2>{{ service.name }}</h2>
-        <p>{{ service.description }}</p>
-        <p><strong>Durée : </strong>{{ service.duration }} min</p>
-        <p><strong>Tarif : </strong>{{ service.price }}€</p>
-
+        <div class="text">
+          <h2>{{ service.name }}</h2>
+          <p>{{ service.description }}</p>
+          <p><strong>Durée : </strong>{{ service.duration }} min</p>
+          <p><strong>Tarif : </strong>{{ service.price }}€</p>
+        </div>
+      </div>
         <div class="form-group">
           <label for="date">Choisissez une date :</label>
           <DatePicker
@@ -41,7 +43,6 @@
         </div>
 
         <Button label="Confirmer la réservation" icon="pi pi-check" class="btn-submit" @click="submitReservation" />
-      </div>
     </div>
     <div v-else>
       <p>Chargement...</p>
@@ -62,7 +63,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useServiceStore } from "@/stores/entityStore";
@@ -268,10 +269,9 @@ fetchAppointments();
 /* Ajoutez ici vos styles existants */
 .reservation-container {
   padding: 20px 0;
-  max-width: 800px;
-  margin: auto;
-  background-color: var(--beige);
   border-radius: 10px;
+  width: 100%;
+  margin-inline: auto;
 }
 
 h1 {
@@ -288,11 +288,11 @@ h1 {
   justify-content: space-around;
   align-items: center;
   margin-bottom: 2vh;
+  margin-inline: auto;
 }
 
 .infos-div p {
   text-align: justify;
-  padding-inline: 20px;
 }
 
 .styled-datepicker {
@@ -312,11 +312,14 @@ h1 {
   font-size: 1em;
   cursor: pointer;
   border-radius: 5px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
 }
 
 label {
   color: var(--taupe);
+}
+.text{
+  margin: 2vh;
 }
 
 .picture {
@@ -326,9 +329,12 @@ label {
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  border: 2px solid var(--taupe);
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
   border-radius: 10px;
 
+}
+strong{
+  font-weight: bold;
 }
 
 .picture img {
@@ -357,6 +363,23 @@ label {
   border-color: var(--taupe);
 }
 
-
+@media (min-width: 500px) {
+  .reservation-container {
+    width: 90vw;
+  }
+  .infos-div{
+    align-items: center;
+    width: 90%;
+  }
+  .content-div{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-bottom: 4vh;
+  }
+  .text{
+    width: 60%;
+  }
+}
 
 </style>

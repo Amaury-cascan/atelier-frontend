@@ -1,7 +1,7 @@
 <template>
   <div class="container">
   <PresentationLayout />
-  <div class="card">
+  <div class="card" v-if="isLoaded === false">
     <Carousel
         :value="services"
         :numVisible="2"
@@ -68,34 +68,41 @@ interface Service {
 
 const authDialogVisible = ref(false);
 const serviceStore = useServiceStore(); // Instanciez le store pour les services
+const isLoaded = ref(false);
 
 const services = ref<Service[]>([]);
 const responsiveOptions = [
   {
-    breakpoint: '1024px',
-    numVisible: 2,
+    breakpoint: '10024px',
+    numVisible: 6,
+    numScroll: 1
+  },
+  {
+    breakpoint: '1150px',
+    numVisible: 4,
     numScroll: 1
   },
   {
     breakpoint: '768px',
-    numVisible: 1,
+    numVisible: 3,
     numScroll: 1
   },
   {
-    breakpoint: '480px',
+    breakpoint: '500px',
     numVisible: 2,
     numScroll: 1
   }
 ];
 
-const handleAppointment = (service: string) => {
+const handleAppointment = (service: any) => {
   const token = localStorage.getItem('token');
   if (token === null) { // Vérifiez si l'utilisateur est connecté
-    const desiredRoute = { name: 'reservation', params: { service: service.value.name } };
+    console.log(service.name)
+    const desiredRoute = { name: 'reservation', params: { service: service.name } };
     localStorage.setItem('desiredRoute', JSON.stringify(desiredRoute)); // Stockage dans localStorage
     authDialogVisible.value = true; // Affichez la pop-up d'authentification
   } else {
-    router.push({ name: 'reservation', params: { service: service.value.name } });
+    router.push({ name: 'reservation', params: { service: service.name } });
   }
 };
 
@@ -114,9 +121,16 @@ const redirectToSignup = () => {
 };
 
 onMounted(async () => {
-  const allServices = await serviceStore.fetchEntities();
-
-  services.value = allServices.filter((service: any) => service.price > 0);
+  isLoaded.value = true;
+  try {
+    const allServices = await serviceStore.fetchEntities();
+    services.value = allServices.filter((service: any) => service.price > 0);
+    isLoaded.value = false;
+  } catch (error) {
+    console.error("Erreur lors du chargement des données:", error);
+  } finally {
+    isLoaded.value = false;
+  }
 
 });
 
@@ -125,7 +139,6 @@ onMounted(async () => {
 <style scoped>
 .card {
   width: 100%;
-  max-width: 700px;
   margin: 0 auto;
 }
 
@@ -137,7 +150,7 @@ onMounted(async () => {
   text-align: center;
   position: relative;
   background: rgba(245, 223, 198, 0.82);
-  box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
   overflow: hidden;
 }
 
@@ -192,7 +205,7 @@ img {
   font-size: 0.9em;
   cursor: pointer;
   border-radius: 5px;
-  box-shadow: 5px 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
   margin-top: 5px;
   position: absolute;
   bottom: 10px;
@@ -202,7 +215,7 @@ img {
   width: 90%;
 }
 .reserve-button:hover {
-  transform: scale(1.1), translateX(-50%);
+  transform: scale(1.1) translateX(-50%);
 }
 .custom-dialog .p-dialog-content {
   background-color: var(--beige);
@@ -210,23 +223,12 @@ img {
   margin-inline: auto;
   width: 90vw;
   font-size: 1.2em;
-  box-shadow: 10px 10px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
   padding: 15px;
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
 }
 
-.custom-dialog .p-dialog-content {
-  background-color: var(--beige);
-  color: var(--taupe);
-  margin-inline: auto;
-  width: 90vw;
-  font-size: 1.2em;
-  box-shadow: 10px 10px 8px rgba(0, 0, 0, 0.1);
-  padding: 15px;
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
-}
 .button-dialog {
   display: flex;
   flex-direction: column;
@@ -241,10 +243,15 @@ img {
   font-size: 1em;
   cursor: pointer;
   border-radius: 5px;
-  box-shadow: 5px 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
   margin-top: 5px;
 }
 .btn-appointment:hover {
   background-color: var(--taupe);
+}
+@media (min-width: 500px) {
+  .card{
+    width: 90%;
+  }
 }
 </style>

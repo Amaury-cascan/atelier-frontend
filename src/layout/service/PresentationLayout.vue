@@ -46,6 +46,8 @@ watch(categoryId, loadCategory);
 <style scoped>
 .content {
   text-align: center;
+  width: 100%;
+  margin-inline: auto;
 }
 
 .picture {
@@ -55,7 +57,6 @@ watch(categoryId, loadCategory);
   display: flex; /* Ajout de cette ligne */
   align-items: center; /* Centrer verticalement */
   justify-content: center; /* Centrer horizontalement */
-
 }
 
 img {
@@ -79,5 +80,32 @@ h1, p {
 
 .presentation p {
   text-align: justify;
+}
+@media (min-width: 500px) {
+  .content {
+    width: 90%;
+    display: flex;
+    border-bottom: 2px solid var(--taupe);
+  }
+  .picture{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    height: 100%;
+    padding: 1vh;
+    border: none;
+  }
+  img {
+    height: 100%;
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+  }
+
+  .presentation {
+    border-bottom: none;
+    margin-bottom: 25px;
+  }
+
 }
 </style>

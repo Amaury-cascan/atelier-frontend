@@ -63,8 +63,20 @@ a {
   color: white;
 }
 @media (min-width: 500px) {
-  body {
-    background-color: white;
+  @media (min-width: 500px) {
+    .services-container {
+      width: 90%;
+    }
+    .service-card{
+      width: 40%;
+    }
+    .custom-dialog .p-dialog-header {
+      width: 50vw !important;
+    }
+
+    .custom-dialog .p-dialog-content {
+      width: 50vw !important;
+    }
   }
 }
 .p-datatable .p-datatable-tbody > tr > td {

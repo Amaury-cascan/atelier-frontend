@@ -144,19 +144,22 @@ const redirectToSignup = () => {
 .services-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  justify-content: center;
+  gap: 2vw;
   padding: 20px;
+  width: 100%;
+  margin-inline: auto;
 }
 .service-card {
   background-color: var(--beige);
   border-radius: 8px;
-  box-shadow: 5px 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
   width: 100%;
-  max-width: 800px;
   text-align: left;
   overflow: hidden;
   position: relative;
-  height: 200px;
+  height: fit-content;
+  padding: 1vh;
 }
 .service-content {
   height: 139px;
@@ -180,7 +183,7 @@ const redirectToSignup = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--taupe);
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
   border-radius: 10px;
   margin-left: 5px;
 }
@@ -201,7 +204,6 @@ img {   /* Largeur de l'image à 100% du conteneur */
   color: var(--taupe);
   margin: 0 0 10px;
   width: 90%;
-  height: 50px;
 }
 .service-price,
 .service-duration {
@@ -217,7 +219,7 @@ img {   /* Largeur de l'image à 100% du conteneur */
   font-size: 1em;
   cursor: pointer;
   border-radius: 5px;
-  box-shadow: 5px 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
   margin-top: 5px;
 }
 .btn-appointment:hover {
@@ -230,20 +232,9 @@ img {   /* Largeur de l'image à 100% du conteneur */
   font-size: 1.2em;
   width: 90vw;
   padding: 15px;
-  box-shadow: 10px 10px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
-}
-.custom-dialog .p-dialog-content {
-  background-color: var(--beige);
-  color: var(--taupe);
-  margin-inline: auto;
-  width: 90vw;
-  font-size: 1.2em;
-  box-shadow: 10px 10px 8px rgba(0, 0, 0, 0.1);
-  padding: 15px;
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
 }
 
 .custom-dialog .p-dialog-content {
@@ -252,15 +243,32 @@ img {   /* Largeur de l'image à 100% du conteneur */
   margin-inline: auto;
   width: 90vw;
   font-size: 1.2em;
-  box-shadow: 10px 10px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
   padding: 15px;
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
 }
+
 .button-dialog {
   display: flex;
   flex-direction: column;
   margin: 0 auto;
   width: 50%;
 }
+@media (min-width: 500px) {
+  .services-container {
+    width: 90%;
+  }
+  .service-card{
+    width: 40%;
+  }
+  .custom-dialog .p-dialog-header {
+    width: 50vw !important;
+  }
+
+  .custom-dialog .p-dialog-content {
+    width: 50vw !important;
+  }
+}
+
 </style>
