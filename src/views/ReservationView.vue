@@ -25,6 +25,7 @@
               showButtonBar
               panelClass="custom-datepicker"
               @date-select="updateAvailableTimes"
+              :selectOtherMonths="true"
           />
         </div>
 
@@ -155,11 +156,11 @@ const updateAvailableTimes = () => {
           ||
           ((dayOfWeek === 2 || dayOfWeek === 3 || dayOfWeek === 4) && (time.getHours() === 18 && time.getMinutes() === 0))
           ||
-          // Vendredi : exclure les créneaux dont la fin dépasse 20h
+          // Vendredi et samedi : exclure les créneaux dont la fin dépasse 20h
           (dayOfWeek === 5 && (endTime.getHours() > 20 || (endTime.getHours() === 20 && endTime.getMinutes() > 0)))
           ||
           // Samedi : exclure les créneaux dont la fin dépasse 15h
-          (dayOfWeek === 6 && (endTime.getHours() > 15 || (endTime.getHours() === 15 && endTime.getMinutes() > 0)))
+          (dayOfWeek === 6 && (endTime.getHours() > 20 || (endTime.getHours() === 20 && endTime.getMinutes() > 0)))
       ) {
         continue; // Exclure ce créneau s'il ne respecte pas les restrictions
       }

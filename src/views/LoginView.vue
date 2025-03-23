@@ -45,22 +45,27 @@ const login = async () => {
   error.value = '';
 
   try {
-    // Appel de la fonction signin du store pour se connecter
+    // Connexion avec le store auth
     await authStore.signin({
       username: emailValue.value,
       password: passwordValue.value
     });
+
+    // Créer l'expiryTime à la connexion (30 minutes)
+    const EXPIRY_TIME = 30 * 60 * 1000; // 30 minutes en millisecondes
+    localStorage.setItem("expiryTime", (Date.now() + EXPIRY_TIME).toString());
+
+    // Vérifier si une route désirée est stockée
     const storedRoute = localStorage.getItem('desiredRoute');
     if (storedRoute) {
-      const desiredRoute = JSON.parse(storedRoute); // Récupérez et parsez la route
-      router.push(desiredRoute); // Redirigez vers la route désirée
-      localStorage.removeItem('desiredRoute'); // Supprimez la route de localStorage après utilisation
+      const desiredRoute = JSON.parse(storedRoute);
+      router.push(desiredRoute);
+      localStorage.removeItem('desiredRoute');
     } else {
-      window.location.href = '/'; // Redirigez vers la page d'accueil si aucune route n'est stockée
+      window.location.href = '/'; // Rediriger vers la page d'accueil
     }
 
   } catch (err) {
-    // Gérer les erreurs
     error.value = 'Erreur de connexion. Veuillez vérifier vos identifiants.';
   } finally {
     loading.value = false;

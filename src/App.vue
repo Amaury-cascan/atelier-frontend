@@ -16,6 +16,30 @@
 <script setup lang="ts">
 import Navigation from "./layout/Navigation.vue";
 import FooterLayout from "@/layout/FooterLayout.vue";
+import { onMounted, onUnmounted } from "vue";
+
+let intervalId: number | null = null;
+
+// Vérifie si le `localStorage` a expiré
+const checkStorageExpiry = () => {
+  const expiryTime = localStorage.getItem("expiryTime");
+  if (expiryTime && Date.now() > Number(expiryTime)) {
+    localStorage.clear();
+    window.location.href = window.location.href;
+  }
+};
+
+
+onMounted(() => {
+  checkStorageExpiry();
+  intervalId = setInterval(checkStorageExpiry, 10 * 60 *  1000); // Vérifie toutes les 10 min
+});
+
+onUnmounted(() => {
+  if (intervalId !== null) {
+    clearInterval(intervalId);
+  }
+});
 </script>
 
 
