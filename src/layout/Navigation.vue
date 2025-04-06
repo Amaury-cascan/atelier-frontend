@@ -11,7 +11,7 @@
         <div class="menu-item" @click="handleItemClick($event, item)">
           {{ item.label }}
           <!-- Sous-menu pour PRESTATIONS -->
-          <div v-if="item.label === 'PRESTATIONS' && showSubMenu" class="submenu">
+          <div v-if="item.label === 'PRESTATIONS' && showSubMenu" class="items-prestation">
             <div
                 v-for="prest in prestations"
                 :key="prest.id"
@@ -145,7 +145,6 @@ h1 {
 .menu{
   display: none;
 }
-
 @media (min-width: 500px) {
   .burger {
     display: none;
@@ -172,7 +171,7 @@ h1 {
     text-align: center;
     cursor: pointer;
     padding-inline: 5px;
-    width: fit-content;
+    width: 15vw;
     position: relative;
   }
   .menu-subitem {
@@ -180,16 +179,20 @@ h1 {
     cursor: pointer;
     background-color: var(--taupe);
     border: 1px solid var(--beige);
-    position: absolute;
     width: 100%;
   }
   .sub-menu{
     border-top: 1px solid var(--taupe);
     display: flex;
     justify-content: space-around;
-    z-index: 1000;
     width: 100%;
     gap: 4vw;
+  }
+  .items-prestation{
+    position: absolute;
+    margin-inline: auto;
+    width: 100%;
+    z-index: 1000;
   }
 }
 

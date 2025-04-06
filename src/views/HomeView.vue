@@ -124,7 +124,7 @@ onMounted(async () => {
   isLoaded.value = true;
   try {
     const allServices = await serviceStore.fetchEntities();
-    services.value = allServices.filter((service: any) => service.price > 0);
+    services.value = allServices.filter(service => service.price > 0 && (service.active === null || service.active === true));
     isLoaded.value = false;
   } catch (error) {
     console.error("Erreur lors du chargement des données:", error);

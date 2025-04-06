@@ -91,7 +91,9 @@ const fetchAndFilterServices =  () => {
           const category = categoryStore.categories.find(cat => cat.id === categoryId.value);
           categoryName.value = category ? category.name : null;
           const services = serviceStore.services.filter(service => service.category === categoryName.value);
-          filteredServices.value = services.filter(service => service.price > 0);
+          filteredServices.value = services.filter(
+              service => service.price > 0 && (service.active === null || service.active === true)
+          );
         });
   } catch (error) {
     console.error("Erreur lors du chargement des données:", error);

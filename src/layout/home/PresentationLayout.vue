@@ -1,20 +1,21 @@
 <template>
   <div class="picture">
-    <img src="../../assets/pictures/atelier.png" alt="Image de l'institut">
+    <img src="../../assets/pictures/atelier.jpg" alt="Image de l'institut">
   </div>
   <div class="presentation">
     <div class="text-presentation">
       <h1>Bienvenue à L'Atelier de Marie</h1>
       <div class="text">
-        <p>Votre nouvelle prothésiste ongulaire au coeur de la Sologne.</p>
+        <p>Votre nouveau salon de beauté au coeur de la Sologne.</p>
         <p>Ici, chaque cliente est traitée avec soin et attention.</p>
         <p>Entrez dans un univers chaleureux et cosy où votre beauté est notre priorité.</p>
+        <a class="annonce" href="https://atelier-de-marie.com/prestation/9">Les Extensions de cils arrivent ! N'hésitez pas à me contacter pour plus d'informations.</a>
         <p>Marie à hâte de vous accueillir à l'Atelier</p>
         <p><a @click="redirectToLogin" class="info">Inscrivez-vous pour profiter de la possibilité de prendre des rendez-vous.</a></p>
       </div>
     </div>
     <div class="picture-full">
-      <img src="../../assets/pictures/atelier.png" alt="Image de l'institut">
+      <img src="../../assets/pictures/atelier.jpg" alt="Image de l'institut">
     </div>
   </div>
 </template>
@@ -70,6 +71,11 @@ a {
 }
 .picture-full{
   display: none;
+}
+.annonce{
+  color: #6e1d0a;
+  font-size: 2.5vh;
+  text-align: justify !important;
 }
 @media (min-width: 500px) {
   .picture {

@@ -92,7 +92,8 @@ h1, p {
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    height: 100%;
+    height: 360px;
+    width: 370px;
     padding: 1vh;
     border: none;
   }
@@ -105,6 +106,7 @@ h1, p {
   .presentation {
     border-bottom: none;
     margin-bottom: 25px;
+    width: 70%;
   }
 
 }
