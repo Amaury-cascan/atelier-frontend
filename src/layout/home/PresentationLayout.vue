@@ -9,7 +9,6 @@
         <p>Votre nouveau salon de beauté au coeur de la Sologne.</p>
         <p>Ici, chaque cliente est traitée avec soin et attention.</p>
         <p>Entrez dans un univers chaleureux et cosy où votre beauté est notre priorité.</p>
-        <a class="annonce" href="https://atelier-de-marie.com/prestation/9">Les Extensions de cils arrivent ! N'hésitez pas à me contacter pour plus d'informations.</a>
         <p>Marie à hâte de vous accueillir à l'Atelier</p>
         <p><a @click="redirectToLogin" class="info">Inscrivez-vous pour profiter de la possibilité de prendre des rendez-vous.</a></p>
       </div>
@@ -41,7 +40,7 @@ const redirectToLogin = () => {
 }
 
 img {
-  object-fit: contain; /* Modifiez ici */
+  object-fit: cover; /* Modifiez ici */
   min-width: 100%; /* Ajoutez cette ligne pour empêcher l'étirement */
   display: flex;
   align-items: center;
@@ -57,6 +56,9 @@ h1,p{
   color: var(--taupe);
   margin-bottom: 0.2rem;
 }
+p {
+  font-size: 1.2em;
+}
 .text {
   width: 90%;
   margin: 0 auto;
@@ -66,18 +68,13 @@ a {
   text-decoration: underline;
   cursor: pointer;
   font-style: oblique;
-  font-size: 1.1vh;
+  font-size: 1em;
   text-align: center;
 }
 .picture-full{
   display: none;
 }
-.annonce{
-  color: #6e1d0a;
-  font-size: 2.5vh;
-  text-align: justify !important;
-}
-@media (min-width: 500px) {
+@media (min-width: 760px) {
   .picture {
   display: none;
   }
@@ -86,7 +83,7 @@ a {
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    height: 100%;
+    height: 35vh;
     padding: 1vh;
   }
   img {
@@ -100,7 +97,7 @@ a {
     justify-content: space-around;
     width: 90%;
     margin-inline: auto;
-    height: 35vh;
+    height: fit-content;
   }
   .text{
     margin: 0;
@@ -110,11 +107,11 @@ a {
     text-align: start;
   }
   p {
-    font-size: 1.1vw;
+    font-size: 1.2em;
     text-align: start;
   }
   a {
-    font-size: 0.9vw;
+    font-size: 0.8em;
     text-align: start;
   }
   .text-presentation{

@@ -62,7 +62,7 @@ onUnmounted(() => {
     width: 100%;
   }
 
-  @media (min-width: 500px) {
+  @media (min-width: 760px) {
     .container-app {
       width: 100vw;
       margin: 0 auto;

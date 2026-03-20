@@ -11,6 +11,7 @@
       <Button class="button" label="Connexion" @click="login" :disabled="loading" />
     </div>
     <p v-if="error" class="error-message">{{ error }}</p>
+    <p><router-link to="/forgot-password">Mot de passe oublié ?</router-link></p>
     <p>Pas encore de compte ? <a @click="redirectToLogin">Inscrivez-vous</a></p>
     <p class="info">Inscrivez-vous pour profiter de la possibilité de prendre des rendez-vous.</p>
   </div>

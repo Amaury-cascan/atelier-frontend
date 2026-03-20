@@ -24,7 +24,7 @@ const userId = user.id;
 // Fonction pour récupérer les rendez-vous existants via l'API
 const fetchAppointments = async () => {
   try {
-    const response = await axios.get(`https://backoffice.atelier-de-marie.com/api/appointment/list`);
+    const response = await axios.get(`http://localhost:8000/api/appointment/list`);
     appointments.value = response.data.appointments;
   } catch (error) {
     console.error("Erreur lors de la récupération des rendez-vous :", error);

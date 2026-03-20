@@ -17,7 +17,7 @@ export const useAuthStore = defineStore('auth', {
             this.loading = true;
             this.error = null;
             try {
-                const response = await axios.post('https://backoffice.atelier-de-marie.com/api/signup', user);
+                const response = await axios.post('http://localhost:8000/api/signup', user);
                 this.user = response.data.user;
                 return response;
             } catch (error: any) {
@@ -47,13 +47,13 @@ export const useAuthStore = defineStore('auth', {
             this.loading = true;
             this.error = null;
             try {
-                const response = await axios.post(`https://backoffice.atelier-de-marie.com/api/login_check`, credentials, { withCredentials: true });
+                const response = await axios.post(`http://localhost:8000/api/login_check`, credentials, { withCredentials: true });
 
                 this.token = response.data.token;
                 localStorage.setItem('token', this.token);
 
                 // Récupération des détails de l'utilisateur avec le token JWT
-                const userResponse = await axios.get(`https://backoffice.atelier-de-marie.com/api/me`, {
+                const userResponse = await axios.get(`http://localhost:8000/api/me`, {
                     headers: { Authorization: `Bearer ${this.token}` }
                 });
 
@@ -92,7 +92,7 @@ export const useAuthStore = defineStore('auth', {
         // Fonction pour envoyer une demande de réinitialisation de mot de passe
         async forgotPassword(email: string) {
             try {
-                const response = await axios.post(`https://backoffice.atelier-de-marie.com/api/forgot-password`, { email });
+                const response = await axios.post(`http://localhost:8000/api/forgot-password`, { email });
                 return response.data;
             } catch (err) {
                 // Vérifier si la réponse correspond à l'erreur 'unknown_user'
@@ -110,7 +110,7 @@ export const useAuthStore = defineStore('auth', {
         // Fonction pour réinitialiser le mot de passe
         async resetPassword(token: string, userData: { password: string, passwordConfirmation: string }){
             try {
-                const response = await axios.patch(`https://backoffice.atelier-de-marie.com/api/reset-password/${token}`, userData );
+                const response = await axios.patch(`http://localhost:8000/api/reset-password/${token}`, userData );
                return response.data;
             } catch (err) {
                  this.error = 'Erreur lors de la réinitialisation du mot de passe.';
@@ -122,7 +122,7 @@ export const useAuthStore = defineStore('auth', {
 
         async verifyEmail (token: string) {
             try {
-                await axios.get(`https://backoffice.atelier-de-marie.com/api/verify/${token}`);
+                await axios.get(`http://localhost:8000/api/verify/${token}`);
             } catch (err) {
                 this.error = 'Erreur lors de la vérification de l\'email.';
                 throw err;
@@ -132,7 +132,7 @@ export const useAuthStore = defineStore('auth', {
         },
         async getUserData() {
             try {
-                const response = await axios.get('https://backoffice.atelier-de-marie.com/api/me', {
+                const response = await axios.get('http://localhost:8000/api/me', {
                     headers: {
                         Authorization: `Bearer ${this.token}`
                     }

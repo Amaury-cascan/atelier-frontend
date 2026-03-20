@@ -49,7 +49,7 @@ h4,h3 ,p {
   color: var(--taupe);
   font-size: 1.5em;
 }
-@media (min-width: 500px) {
+@media (min-width: 760px) {
   .footer {
     width: 90%;
     margin-inline: auto;

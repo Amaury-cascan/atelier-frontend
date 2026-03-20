@@ -18,7 +18,7 @@
       <div class="service-content">
         <div class="service-image">
           <img
-              :src="'https://backoffice.atelier-de-marie.com/images/service/' + service.picture"
+              :src="'http://localhost:8000/images/service/' + service.picture"
               alt="Service image"
           />
         </div>
@@ -92,7 +92,7 @@ const fetchAndFilterServices =  () => {
           categoryName.value = category ? category.name : null;
           const services = serviceStore.services.filter(service => service.category === categoryName.value);
           filteredServices.value = services.filter(
-              service => service.price > 0 && (service.active === null || service.active === true)
+              service => service.price > 0 && service.active !== false
           );
         });
   } catch (error) {
@@ -257,7 +257,7 @@ img {   /* Largeur de l'image à 100% du conteneur */
   margin: 0 auto;
   width: 50%;
 }
-@media (min-width: 500px) {
+@media (min-width: 760px) {
   .services-container {
     width: 90%;
   }

@@ -10,17 +10,6 @@
       <div v-for="(item, index) in menuItems" :key="index" >
         <div class="menu-item" @click="handleItemClick($event, item)">
           {{ item.label }}
-          <!-- Sous-menu pour PRESTATIONS -->
-          <div v-if="item.label === 'PRESTATIONS' && showSubMenu" class="items-prestation">
-            <div
-                v-for="prest in prestations"
-                :key="prest.id"
-                class="menu-subitem"
-                @click.stop="navigateTo(prest.id)"
-            >
-              {{ prest.name }}
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -37,21 +26,6 @@ import {useCategoryStore} from "@/stores/entityStore";
 const router = useRouter();
 const menu = ref<any>(null);
 const showSubMenu = ref(false);
-const categorieStore = useCategoryStore();
-const prestations = ref([]); // Liste des prestations
-const loading = ref(false);
-
-// Fonction exécutée lors de l'initialisation du composant (onMounted)
-onMounted(async () => {
-  try {
-    loading.value = true; // Activer le loader pendant la récupération des données
-    prestations.value = await categorieStore.fetchEntities(); // Appel à la fonction du store pour fetch les entités
-  } catch (error) {
-    console.error("Erreur lors du fetch des entités:", error);
-  } finally {
-    loading.value = false; // Désactiver le loader après la récupération des données
-  }
-});
 
 // Détermine si l'utilisateur est connecté
 const isAuthenticated = computed(() => !!localStorage.getItem('token'));
@@ -60,7 +34,6 @@ const isAuthenticated = computed(() => !!localStorage.getItem('token'));
 const getMenuItems = () => {
   const items = [
     { label: 'INSTITUT' },
-    { label: 'PRESTATIONS' },
     {label: 'PHOTOS'}
   ];
 
@@ -145,7 +118,7 @@ h1 {
 .menu{
   display: none;
 }
-@media (min-width: 500px) {
+@media (min-width: 760px) {
   .burger {
     display: none;
   }

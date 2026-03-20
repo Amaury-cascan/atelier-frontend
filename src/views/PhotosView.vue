@@ -9,7 +9,7 @@
 
     >
       <img
-          :src="'https://backoffice.atelier-de-marie.com/images/service/' + p.picture"
+          :src="'http://localhost:8000/images/service/' + p.picture"
           :alt="p.description"
       />
       <p>{{ p.description }}</p>
@@ -24,7 +24,7 @@
     <div v-if="modalVisible" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
         <img
-            :src="'https://backoffice.atelier-de-marie.com/images/service/' + selectedPhoto?.picture"
+            :src="'http://localhost:8000/images/service/' + selectedPhoto?.picture"
             :alt="selectedPhoto?.description"
         />
         <p>{{ selectedPhoto?.description }}</p>
@@ -221,7 +221,7 @@ h1{
   cursor: pointer;
 }
 
-@media (min-width: 500px) {
+@media (min-width: 760px) {
   .img-container {
     width: 23%;
     height: 40vh;

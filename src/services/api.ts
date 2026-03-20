@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const axiosInstance= axios.create({
-    baseURL: `https://backoffice.atelier-de-marie.com/api/`,
+    baseURL: `http://localhost:8000/api/`,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -22,5 +22,23 @@ axiosInstance.interceptors.request.use(
         return Promise.reject(error);
     }
 );
+
+export const requestPasswordReset = (email: string) => {
+    return axiosInstance.post('password-reset/request', {
+        email,
+        frontend_url: window.location.origin
+    });
+};
+
+export const verifyPasswordResetToken = (token: string) => {
+    return axiosInstance.post('password-reset/verify-token', { token });
+};
+
+export const confirmPasswordReset = (token: string, password: string) => {
+    return axiosInstance.post('password-reset/confirm', {
+        token,
+        password
+    });
+};
 
 export default axiosInstance;

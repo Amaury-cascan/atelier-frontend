@@ -3,9 +3,36 @@
     <h1>Réservation</h1>
     <div v-if="service" class="infos-div">
       <div class="content-div">
-        <div class="picture">
-          <img :src="'https://backoffice.atelier-de-marie.com/images/service/' + service.picture" alt="Service image" />
+        <div class="ordi">
+          <div class="form-group">
+            <label class="label-date" for="date">Choisissez une date :</label>
+            <ModernCalendar
+              ref="calendarRef"
+              id="date"
+              v-model="reservation.date"
+              :disabledDays="daysDisabled"
+              :minDate="new Date()"
+              :service="service"
+              :appointments="appointments"
+              @time-selected="onTimeSelected"
+            />
+          </div>
+
+          <div v-if="reservation.date && reservation.time" class="selected-time-display">
+            <div class="time-selected">
+              <i class="pi pi-clock"></i>
+              <span>Créneau sélectionné : <strong>{{ reservation.time }}</strong></span>
+              <button class="change-time-btn" @click="changeTime">
+                <i class="pi pi-pencil"></i>
+                Modifier
+              </button>
+            </div>
+            <Button label="Confirmer la réservation" icon="pi pi-check" class="btn-submit" @click="submitReservation" />
+          </div>
+
+         
         </div>
+        
         <div class="text">
           <h2>{{ service.name }}</h2>
           <p>{{ service.description }}</p>
@@ -13,37 +40,33 @@
           <p><strong>Tarif : </strong>{{ service.price }}€</p>
         </div>
       </div>
+      <div class="mobile">
         <div class="form-group">
           <label for="date">Choisissez une date :</label>
-          <DatePicker
-              id="date"
-              v-model="reservation.date"
-              :showIcon="true"
-              :disabledDays="[0,1]"
-              dateFormat="dd/mm/yy"
-              class="styled-datepicker"
-              showButtonBar
-              panelClass="custom-datepicker"
-              @date-select="updateAvailableTimes"
-              :selectOtherMonths="true"
+          <ModernCalendar
+            ref="calendarRef"
+            id="date"
+            v-model="reservation.date"
+            :disabledDays="daysDisabled"
+            :minDate="new Date()"
+            :service="service"
+            :appointments="appointments"
+            @time-selected="onTimeSelected"
           />
         </div>
-
-        <div class="form-group" v-if="reservation.date">
-          <label for="time">Choisissez une heure :</label>
-          <Select
-              id="time"
-              v-model="reservation.time"
-              :options="availableTimes"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Sélectionnez une heure"
-              required
-              class="styled-select"
-          />
+        <div v-if="reservation.date && reservation.time" class="selected-time-display">
+          <div class="time-selected">
+            <i class="pi pi-clock"></i>
+            <span>Créneau sélectionné : <strong>{{ reservation.time }}</strong></span>
+            <button class="change-time-btn" @click="changeTime">
+              <i class="pi pi-pencil"></i>
+              Modifier
+            </button>
+          </div>
+          <Button label="Confirmer la réservation" icon="pi pi-check" class="btn-submit" @click="submitReservation" />
         </div>
-
-        <Button label="Confirmer la réservation" icon="pi pi-check" class="btn-submit" @click="submitReservation" />
+        
+      </div>  
     </div>
     <div v-else>
       <p>Chargement...</p>
@@ -57,7 +80,7 @@
         :modal="true"
         class="custom-dialog"
     >
-      <p>Réservation confirmée avec succès pour la prestation : {{ service.name }} le {{ reservation.date ? reservation.date.toLocaleDateString() : '' }} à {{ reservation.time }}.</p>
+      <p>Réservation confirmée avec succès pour la prestation : {{ service?.name }} le {{ reservation.date ? reservation.date.toLocaleDateString() : '' }} à {{ reservation.time }}.</p>
       <br>
       <p>Un email de confirmation vient de vous être envoyé. Nous vous invitons à vérifier votre boîte mail, y compris les courriers indésirables (spam), pour vous assurer de l’avoir bien reçu.</p>
     </Dialog>
@@ -70,9 +93,25 @@ import { useRoute, useRouter } from 'vue-router';
 import { useServiceStore } from "@/stores/entityStore";
 import axios from 'axios';
 
-// Importation des composants PrimeVue
-import DatePicker from "primevue/datepicker";
-import Select from "primevue/select";
+// Interfaces
+interface Service {
+  id: number;
+  name: string;
+  description: string;
+  duration: number;
+  price: number;
+  picture: string;
+}
+
+interface Appointment {
+  date: string;
+  endDate: string;
+}
+
+
+
+// Importation des composants PrimeVue et personnalisés
+import ModernCalendar from "@/components/ModernCalendar.vue";
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 
@@ -80,11 +119,15 @@ import Dialog from 'primevue/dialog';
 const route = useRoute();
 const router = useRouter();
 const serviceStore = useServiceStore();
-const service = ref(null);
-const reservation = ref({
+const service = ref<Service | null>(null);
+const daysDisabled = ref([]); // Logique de restriction gérée directement dans ModernCalendar
+const reservation = ref<{date: Date | null, time: string}>({
   date: null,
   time: ''
 });
+
+// Référence au composant calendrier
+const calendarRef = ref();
 
 
 const fetchServices = async () => {
@@ -93,20 +136,20 @@ const fetchServices = async () => {
 };
 
 const fetchService = () => {
-  const serviceName = route.params.service;
-  service.value = serviceStore.services.find(s => s.name === serviceName);
-
+  const serviceName = route.params.service as string;
+  if (serviceStore.services && Array.isArray(serviceStore.services)) {
+    service.value = serviceStore.services.find((s: Service) => s.name === serviceName) || null;
+  }
 };
 
 
-const availableTimes = ref([]);
-const appointments = ref([]);
+const appointments = ref<Appointment[]>([]);
 const showDialog = ref(false); // État de la modal
 
 // Fonction pour récupérer les rendez-vous existants via l'API
 const fetchAppointments = async () => {
   try {
-    const response = await axios.get(`https://backoffice.atelier-de-marie.com/api/appointment/list`);
+    const response = await axios.get(`http://localhost:8000/api/appointment/list`);
     appointments.value = response.data.appointments;
   } catch (error) {
     console.error('Erreur lors de la récupération des rendez-vous :', error);
@@ -114,115 +157,33 @@ const fetchAppointments = async () => {
 };
 
 
-// Fonction pour mettre à jour les créneaux horaires disponibles
-const updateAvailableTimes = () => {
-  const startHour = 10; // Heure de début (10h)
-  const interval = 30; // Intervalle de 30 minutes
-  let times = [];
-  const now = new Date();
+// Fonction appelée quand un horaire est sélectionné dans la popup
+const onTimeSelected = (selectedTime: string) => {
+  reservation.value.time = selectedTime;
+};
 
-  const selectedDate = reservation.value.date;
-  if (!selectedDate) return;
-
-  const selectedDateLocal = new Date(selectedDate.getTime() - now.getTimezoneOffset() * 60000);
-  const dayOfWeek = selectedDateLocal.getUTCDay(); // 0 = dimanche, 1 = lundi, ..., 6 = samedi
-  const serviceDuration = service.value.duration; // Durée du service en minutes
-
-  // Filtrer les rendez-vous pour la date sélectionnée
-  const selectedDateString = selectedDateLocal.toISOString().split('T')[0];
-  const appointmentsForSelectedDate = appointments.value.filter(appointment => {
-    const appointmentDate = new Date(appointment.date);
-    return appointmentDate.toISOString().split('T')[0] === selectedDateString;
-  });
-
-  // Génération des créneaux horaires
-  for (let hour = startHour; hour <= 20; hour++) {
-    for (let minute = 0; minute < 60; minute += interval) {
-      const time = new Date(selectedDateLocal);
-      time.setHours(hour, minute, 0, 0);
-      const endTime = new Date(time.getTime() + serviceDuration * 60000);
-      // Appliquer les restrictions spécifiques aux jours
-      if (
-          // Mardi, mercredi, jeudi :
-          ((dayOfWeek === 2 || dayOfWeek === 3 || dayOfWeek === 4) && (endTime.getHours() === 17 && endTime.getMinutes() > 0))
-          ||
-          ((dayOfWeek === 2 || dayOfWeek === 3 || dayOfWeek === 4) && (endTime.getHours() === 18 && endTime.getMinutes() >= 0))
-          ||
-          ((dayOfWeek === 2 || dayOfWeek === 3 || dayOfWeek === 4) && (endTime.getHours() > 20))
-          ||
-          ((dayOfWeek === 2 || dayOfWeek === 3 || dayOfWeek === 4) && (endTime.getHours() === 20 && endTime.getMinutes() > 0))
-          ||
-          ((dayOfWeek === 2 || dayOfWeek === 3 || dayOfWeek === 4) && time.getHours() === 17)
-          ||
-          ((dayOfWeek === 2 || dayOfWeek === 3 || dayOfWeek === 4) && (time.getHours() === 18 && time.getMinutes() === 0))
-          ||
-          // Vendredi et samedi : exclure les créneaux dont la fin dépasse 20h
-          (dayOfWeek === 5 && (endTime.getHours() > 20 || (endTime.getHours() === 20 && endTime.getMinutes() > 0)))
-          ||
-          // Samedi : exclure les créneaux dont la fin dépasse 15h
-          (dayOfWeek === 6 && (endTime.getHours() > 20 || (endTime.getHours() === 20 && endTime.getMinutes() > 0)))
-      ) {
-        continue; // Exclure ce créneau s'il ne respecte pas les restrictions
-      }
-
-      // Vérifiez que l'heure n'est pas dans le passé
-      if (time > now) {
-        const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const isSlotTaken = isTimeSlotTaken(timeString, appointmentsForSelectedDate);
-
-        if (!isSlotTaken) {
-          times.push({ label: timeString, value: timeString });
-        }
-      }
-      if (times.length === 0) {
-        times.push({ label: 'Plus de rendez-vous disponibles', value: null, disabled: true });
-      }
-    }
+// Fonction pour changer l'heure (rouvrir la popup)
+const changeTime = () => {
+  if (calendarRef.value && reservation.value.date) {
+    // Ouvrir la popup via la méthode exposée du calendrier
+    calendarRef.value.openTimeSlotsPopup();
   }
-  availableTimes.value = times;
 };
 
 
-
-// Vérifie si un créneau est déjà réservé
-const isTimeSlotTaken = (time, appointmentsForSelectedDate) => {
-  const [hour, minute] = time.split(':').map(Number);
-
-  // Créez une date pour l'heure sélectionnée
-  const selectedTimeDate = new Date(reservation.value.date); // Utilisez la date de réservation
-  selectedTimeDate.setHours(hour, minute); // Définir l'heure du créneau
-
-  const serviceDuration = service.value.duration; // Durée du service en minutes
-  const selectedEndTimeDate = new Date(selectedTimeDate.getTime() + serviceDuration * 60000); // Heure de fin du créneau
-
-  // Vérifiez pour chaque rendez-vous si le créneau horaire est pris
-  return appointmentsForSelectedDate.some(appointment => {
-    const appointmentStart = new Date(appointment.date);
-    const appointmentEnd = new Date(appointment.endDate);
-
-    // Vérifier le chevauchement
-    return (
-        // 1. Le créneau commence pendant un rendez-vous existant
-        (selectedTimeDate >= appointmentStart && selectedTimeDate < appointmentEnd) ||
-        // 2. La fin du créneau sélectionné chevauche le début d'un rendez-vous existant
-        (selectedEndTimeDate > appointmentStart && selectedEndTimeDate <= appointmentEnd) ||
-        // 3. Le créneau commence avant un rendez-vous existant et finit après le début de ce dernier
-        (selectedTimeDate < appointmentEnd && selectedEndTimeDate > appointmentStart)
-    );
-  });
-};
 
 
 
 
 // Soumettre la réservation
 const submitReservation = async () => {
-  if (reservation.value.date && reservation.value.time) {
+  if (reservation.value.date && reservation.value.time && service.value) {
     const reservationDateTime = new Date(reservation.value.date);
     const [hour, minute] = reservation.value.time.split(':').map(Number);
     reservationDateTime.setHours(hour, minute);
 
-    const user = JSON.parse(localStorage.getItem('user'));
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
     const userId = user ? user.id : null;
 
     if (!userId) {
@@ -240,7 +201,7 @@ const submitReservation = async () => {
     };
 
     try {
-      const response = await axios.post('https://backoffice.atelier-de-marie.com/api/appointment/create', payload);
+      const response = await axios.post('http://localhost:8000/api/appointment/create', payload);
       if (response.data.success) {
         showDialog.value = true; // Affiche le Dialog de confirmation
         // Attendre 3 secondes avant de changer de route
@@ -296,14 +257,10 @@ h1 {
   text-align: justify;
 }
 
-.styled-datepicker {
-  width: 100%;
-  font-size: 1.1em;
-  color: var(--taupe);
-  padding: 10px;
-  border-radius: 8px;
-  border: 2px solid var(--taupe);
+.pi-pencil {
+  color: white !important;
 }
+
 
 
 .btn-submit {
@@ -316,8 +273,12 @@ h1 {
   box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
 }
 
-label {
+.label-date {
   color: var(--taupe);
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-left: 20px;
+  margin-bottom: 20px;
 }
 .text{
   margin: 2vh;
@@ -329,6 +290,7 @@ label {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-inline: auto;
   overflow: hidden;
   box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
   border-radius: 10px;
@@ -353,7 +315,7 @@ strong{
 .styled-select {
   width: 100%;
   font-size: 1.1em;
-  color: var(--taupe);
+  color: white;
   padding: 10px;
   border-radius: 8px;
   border: 2px solid var(--taupe);
@@ -364,7 +326,92 @@ strong{
   border-color: var(--taupe);
 }
 
-@media (min-width: 500px) {
+.selected-time-display {
+  padding-inline: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.time-selected {
+  background: linear-gradient(135deg, #f8f6f3 0%, #ede8e0 100%);
+  border: 2px solid var(--taupe);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 400px;
+  margin:0 10px;
+  box-shadow: 0 4px 12px rgba(139, 115, 85, 0.1);
+  animation: slideIn 0.3s ease-out;
+}
+
+.time-selected i {
+  color: var(--taupe);
+  font-size: 1.2rem;
+}
+
+.time-selected span {
+  flex: 1;
+  font-size: 1.1rem;
+  color: var(--taupe);
+}
+
+.time-selected strong {
+  color: var(--taupe);
+  font-weight: 600;
+}
+
+.change-time-btn {
+  background: var(--taupe);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.change-time-btn:hover {
+  background: var(--taupe);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(139, 115, 85, 0.3);
+}
+.ordi {
+    display:none
+  } 
+  .mobile {
+    display:block;
+  }
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+@media (min-width: 760px) {
+  .ordi {
+    display:block
+  } 
+  .mobile {
+    display:none;
+  }
   .reservation-container {
     width: 90vw;
   }

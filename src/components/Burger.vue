@@ -17,17 +17,6 @@
       <template #item="{ item }">
         <div class="menu-item" @click="handleItemClick($event, item)">
           {{ item.label }}
-          <!-- Sous-menu pour PRESTATIONS -->
-          <div v-if="item.label === 'PRESTATIONS' && showSubMenu" class="submenu">
-            <div
-                v-for="prest in prestations"
-                :key="prest.id"
-                class="menu-subitem"
-                @click.stop="navigateTo(prest.id)"
-            >
-              {{ prest.name }}
-            </div>
-          </div>
         </div>
       </template>
     </Menu>
@@ -68,7 +57,6 @@ const isAuthenticated = computed(() => !!localStorage.getItem('token'));
 const getMenuItems = () => {
   const items = [
     { label: 'INSTITUT' },
-    { label: 'PRESTATIONS' },
     {label: 'PHOTOS'}
   ];
 
@@ -158,10 +146,4 @@ const navigateTo = (categoryId: number) => {
   padding-inline: 5px;
 }
 
-.menu-subitem {
-  color: var(--beige);
-  cursor: pointer;
-  background-color: var(--taupe);
-  border: 1px solid var(--beige);
-}
 </style>
