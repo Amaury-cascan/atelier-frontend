@@ -48,9 +48,16 @@
       </div>
     </div>
 
+    <!-- Légende -->
+    <div class="calendar-legend">
+      <span class="legend-item"><span class="legend-dot legend-dot--available"></span>Disponible</span>
+      <span class="legend-item"><span class="legend-dot legend-dot--none"></span>Complet</span>
+      <span class="legend-item"><span class="legend-dot legend-dot--selected"></span>Sélectionné</span>
+    </div>
+
     <div v-if="selectedDateInfo" class="selected-date-info">
       <div class="date-display">
-        <i class="pi pi-calendar"></i>
+        <i class="pi pi-check-circle"></i>
         <span>{{ selectedDateInfo }}</span>
       </div>
     </div>
@@ -117,6 +124,11 @@ const props = defineProps({
   appointments: {
     type: Array,
     default: () => []
+  },
+  /** Si false, n'ouvre pas la popup interne — le parent gère les créneaux via @slots-available */
+  showPopup: {
+    type: Boolean,
+    default: true
   }
 });
 
@@ -432,8 +444,8 @@ const selectDate = (day: CalendarDay) => {
   const availableSlots = getAvailableTimesForDate(day.fullDate);
   emit('slots-available', availableSlots);
   
-  // Ouvrir la popup seulement s'il y a des créneaux disponibles
-  if (availableSlots.length > 0) {
+  // Ouvrir la popup interne seulement si showPopup est activé
+  if (props.showPopup && availableSlots.length > 0) {
     popupSelectedDate.value = day.fullDate;
     popupTimeSlots.value = availableSlots;
     showTimeSlotsPopup.value = true;
@@ -504,69 +516,80 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* ── Calendrier ── */
 .modern-calendar {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 0;
+  box-shadow: var(--shadow-sm);
   padding: 24px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  max-width: 400px;
-  margin: 0 auto;
+  font-family: 'Montserrat', sans-serif;
+  max-width: 420px;
+  animation: fadeUp 0.3s ease-out;
 }
 
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header mois ── */
 .calendar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .nav-button {
-  background: var(--taupe, #8B7355);
-  border: none;
-  border-radius: 12px;
-  width: 40px;
-  height: 40px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 0;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  color: var(--text-muted);
+}
+.nav-button:hover:not(:disabled) {
+  background: var(--taupe);
+  border-color: var(--taupe);
   color: white;
 }
-
-.nav-button:hover:not(:disabled) {
-  background: var(--taupe-dark, #6d5a44);
-  transform: translateY(-1px);
-}
-
 .nav-button:disabled {
-  background: #e0e0e0;
+  opacity: 0.3;
   cursor: not-allowed;
-  color: #999;
 }
 
 .month-year {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--taupe, #8B7355);
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.3rem;
+  font-weight: 400;
+  color: var(--text-dark);
   margin: 0;
   text-align: center;
   flex: 1;
+  letter-spacing: 0.04em;
 }
 
+/* ── Grille ── */
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  gap: 3px;
 }
 
 .day-header {
   text-align: center;
-  font-weight: 600;
-  color: var(--taupe, #8B7355);
-  padding: 12px 0;
-  font-size: 0.875rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  padding: 10px 0;
+  text-transform: uppercase;
 }
 
 .day-cell {
@@ -575,165 +598,136 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 0;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.18s ease, color 0.18s ease;
   background: transparent;
-  min-height: 48px;
+  min-height: 40px;
 }
 
 .day-number {
+  font-size: 0.85rem;
   font-weight: 500;
-  font-size: 0.95rem;
 }
 
 .day-cell.other-month {
-  opacity: 0.3;
+  opacity: 0.2;
   cursor: default;
 }
 
 .day-cell.disabled {
-  color: #ccc;
+  color: var(--border-strong);
   cursor: not-allowed;
-  background: #f8f8f8;
+  background: transparent;
 }
 
 .day-cell.available {
-  color: var(--taupe, #8B7355);
-  background: #f8f6f3;
-  border: 2px solid transparent;
+  color: var(--text-dark);
+  background: var(--blush);
   cursor: pointer;
 }
-
 .day-cell.available:hover {
-  background: var(--taupe, #8B7355);
+  background: var(--taupe);
   color: white;
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(139, 115, 85, 0.3);
 }
 
 .day-cell.no-slots {
-  color: #adb5bd;
-  background: #f8f9fa;
-  border: 2px solid transparent;
+  color: var(--text-muted);
+  background: transparent;
   cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.day-cell.no-slots:hover {
-  background: #f8f9fa;
-  color: #adb5bd;
-  transform: none;
-  box-shadow: none;
+  opacity: 0.45;
 }
 
 .day-cell.selected {
-  background: var(--taupe, #8B7355);
+  background: var(--taupe);
   color: white;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(139, 115, 85, 0.4);
 }
 
 .day-cell.today {
-  border: 2px solid var(--taupe, #8B7355);
+  outline: 1.5px solid var(--taupe);
+  outline-offset: -1.5px;
   font-weight: 600;
 }
-
 .day-cell.today.available:not(.selected) {
-  background: rgba(139, 115, 85, 0.1);
+  background: rgba(174, 120, 112, 0.1);
 }
 
+/* ── Indicateur disponibilité ── */
 .availability-indicator {
   position: absolute;
-  bottom: 4px;
-  right: 4px;
+  bottom: 3px;
+  right: 3px;
 }
-
 .dot {
-  width: 6px;
-  height: 6px;
-  background: #4ade80;
+  width: 5px;
+  height: 5px;
+  background: #5cb88a;
   border-radius: 50%;
-  animation: pulse 2s infinite;
-  transition: background-color 0.3s ease;
+  animation: pulse 2.5s ease infinite;
 }
-
 .dot-unavailable {
-  background: #ef4444 !important;
-  animation: pulseRed 2s infinite;
+  background: #c47070 !important;
 }
-
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
-  }
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
 }
 
-@keyframes pulseRed {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-.selected-date-info {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #e5e5e5;
-}
-
-.date-display {
+/* ── Légende ── */
+.calendar-legend {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 20px;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--border-color);
+  margin-top: 12px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.legend-dot--available { background: #5cb88a; }
+.legend-dot--none      { background: #c47070; }
+.legend-dot--selected  { background: var(--taupe); }
+
+/* ── Info date sélectionnée ── */
+.selected-date-info {
+  margin-top: 14px;
+  padding: 12px 16px;
+  background: var(--blush);
+  border-left: 3px solid var(--taupe);
+}
+.date-display {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  font-weight: 500;
-  color: var(--taupe, #8B7355);
-  font-size: 1rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--taupe);
+  text-transform: capitalize;
 }
+.date-display i { font-size: 0.82rem; }
 
-.date-display i {
-  color: var(--taupe, #8B7355);
-}
-
-/* Responsive */
+/* ── Responsive ── */
 @media (max-width: 480px) {
-  .modern-calendar {
-    padding: 16px;
-    margin: 0 10px;
-  }
-  
-  .month-year {
-    font-size: 1.25rem;
-  }
-  
-  .day-cell {
-    min-height: 44px;
-  }
-  
-  .day-number {
-    font-size: 0.9rem;
-  }
-}
-
-/* Animation d'entrée */
-.modern-calendar {
-  animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  .modern-calendar { padding: 16px; }
+  .month-year { font-size: 1.1rem; }
+  .day-cell { min-height: 36px; }
+  .day-number { font-size: 0.8rem; }
 }
 </style>

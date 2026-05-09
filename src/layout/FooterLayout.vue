@@ -1,86 +1,179 @@
 <template>
-  <div class="footer">
-    <div class="coordonees">
-      <div class="picture">
-        <img src="../assets/logo/1.png" alt="Logo">
+  <footer class="footer">
+    <div class="footer-inner">
+
+      <!-- Marque -->
+      <div class="footer-brand">
+        <img src="../assets/logo/1.png" alt="L'Atelier de Marie" class="footer-logo">
+        <span class="footer-name">L'Atelier de Marie</span>
       </div>
-      <h3>L'Atelier de Marie</h3>
-      <h4>06.60.53.50.44</h4>
-      <p>latelierdemarie41@outlook.com</p>
-      <div>
-        <p>19 Rue Georges Genevier</p>
-        <p>41300 Salbris</p>
+
+      <!-- Séparateur vertical -->
+      <div class="footer-sep"></div>
+
+      <!-- Coordonnées -->
+      <div class="footer-contact">
+        <a href="tel:+33660535044" class="footer-link">
+          <i class="pi pi-phone"></i> 06 60 53 50 44
+        </a>
+        <a href="https://maps.google.com/?q=19+Rue+Georges+Genevier+41300+Salbris" target="_blank" rel="noopener" class="footer-link">
+          <i class="pi pi-map-marker"></i> 19 Rue Georges Genevier, Salbris
+        </a>
       </div>
-      <div class="icons">
-        <a target="_blank" href="https://www.facebook.com/people/LAtelier-de-Marie/61567138575765/"><i class="pi pi-facebook"></i></a>
-        <a target="_blank" href="https://www.instagram.com/accounts/login/?next=https%3A%2F%2Fwww.instagram.com%2Flatelierdemarie41%2F%3Figsh%3DYnB3dXYwbnVuNTJn&is_from_rle"><i class="pi pi-instagram"></i></a>
+
+      <!-- Réseaux -->
+      <div class="footer-social">
+        <a href="https://www.facebook.com/people/LAtelier-de-Marie/61567138575765/" target="_blank" rel="noopener" aria-label="Facebook" class="social-link">
+          <i class="pi pi-facebook"></i>
+        </a>
+        <a href="https://www.instagram.com/latelierdemarie41/" target="_blank" rel="noopener" aria-label="Instagram" class="social-link">
+          <i class="pi pi-instagram"></i>
+        </a>
       </div>
+
     </div>
-  </div>
+
+    <div class="footer-bottom">
+      <p>© {{ new Date().getFullYear() }} L'Atelier de Marie — Tous droits réservés</p>
+    </div>
+  </footer>
 </template>
 
 <script setup lang="ts">
 </script>
 
 <style scoped>
-img {
-  width: 20%;
-  object-fit: cover;
-  margin-inline: auto;
-}
 .footer {
-  border-top: 2px solid var(--taupe);
-  margin-top: 25px;
+  background: var(--blush);
+  border-top: 1px solid var(--border-color);
 }
-h4,h3 ,p {
-  text-align: center;
-  margin: 0.5em;
-  color: var(--taupe);
-  line-height: 0.6em;
+
+/* ── Bande principale compacte ── */
+.footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 5%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px 32px;
 }
-.picture {
+
+/* Marque */
+.footer-brand {
   display: flex;
   align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
-.icons {
+.footer-logo {
+  width: 30px;
+  height: 30px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  opacity: 0.85;
+}
+.footer-name {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-dark);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+/* Séparateur vertical */
+.footer-sep {
+  width: 1px;
+  height: 28px;
+  background: var(--border-strong);
+  flex-shrink: 0;
+  display: none;
+}
+
+/* Contact */
+.footer-contact {
   display: flex;
-  justify-content: center;
-  gap: 1em;
-  color: var(--taupe);
-  font-size: 1.5em;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  flex: 1;
+  min-width: 0;
 }
-@media (min-width: 760px) {
-  .footer {
-    width: 90%;
-    margin-inline: auto;
-    display: flex;
-  }
-  .coordonees{
-    display: flex;
-    width: 100%;
-    justify-content: center;
-    gap: 2vw;
+.footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+.footer-link:hover { color: var(--taupe); }
+.footer-link .pi { font-size: 0.72rem; color: var(--taupe); opacity: 0.7; }
+
+/* Réseaux */
+.footer-social {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-strong);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+.social-link:hover {
+  color: var(--taupe);
+  border-color: var(--taupe);
+  background: rgba(174, 120, 112, 0.06);
+}
+
+/* Copyright */
+.footer-bottom {
+  border-top: 1px solid var(--border-color);
+  padding: 12px 5%;
+  text-align: center;
+}
+.footer-bottom p {
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+/* ── Mobile : empilement vertical centré ── */
+@media (max-width: 639px) {
+  .footer-inner {
+    flex-direction: column;
     align-items: center;
+    text-align: center;
+    gap: 16px;
+    padding: 22px 5% 18px;
   }
-  .footer {
-    width: 90%;
+
+  .footer-contact {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
   }
-  .picture {
-    width: fit-content;
-    align-items: start;
+
+  .footer-link {
+    justify-content: center;
   }
-  img {
-    width: 3vw;
-  }
-  h3{
-    font-size: 1.4vw;
-  }
-  h4{
-    font-size: 1.1vw;
-  }
-  P{
-    font-size: 1.1vw;
-  }
+}
+
+/* Desktop */
+@media (min-width: 640px) {
+  .footer-sep { display: block; }
 }
 </style>
-

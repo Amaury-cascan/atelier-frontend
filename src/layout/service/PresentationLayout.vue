@@ -1,7 +1,7 @@
 <template>
   <div v-if="category" class="content">
     <div class="picture">
-      <img :src="'http://localhost:8000/images/service/' + category.picture" alt="Image de la catégorie">
+      <img :src="'https://backoffice.atelier-de-marie.com/images/service/' + category.picture" alt="Image de la catégorie">
     </div>
     <div class="presentation">
       <h1>{{ category.name }}</h1>

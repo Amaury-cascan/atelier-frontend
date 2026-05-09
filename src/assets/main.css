@@ -2,46 +2,65 @@
 
 ul {
   list-style: none;
+  padding: 0;
 }
-body{
-  background-color: var(--beige);
+
+body {
+  background-color: var(--cream);
   font-family: 'Montserrat', sans-serif;
 }
-h1 {
-  font-family: "Bona Nova SC", serif;
+
+h1, h2 {
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  color: var(--text-dark);
 }
+
+h3, h4, h5, h6 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
 a {
   text-decoration: none;
   color: inherit;
 }
 
+/* ─────────────────────────────────────────────
+   PrimeVue – Datepicker
+───────────────────────────────────────────── */
 .p-datepicker-panel {
-  background-color: var(--beige) !important;
-  color: var(--taupe) !important;
-  border: 1px solid var(--taupe) !important;
-  border-radius: 5px !important;
-  padding: 10px !important;
+  background-color: var(--white) !important;
+  color: var(--text-dark) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 12px !important;
+  padding: 12px !important;
+  box-shadow: var(--shadow-md) !important;
 }
 
 .p-select-overlay {
-  background-color: var(--beige) !important;
-  color: var(--taupe) !important;
-  border: 1px solid var(--taupe) !important;
-  border-radius: 5px !important;
+  background-color: var(--white) !important;
+  color: var(--text-dark) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 12px !important;
   padding: 10px !important;
+  box-shadow: var(--shadow-md) !important;
 }
 
 .custom-datepicker .p-datepicker-header {
   background-color: var(--taupe);
   color: white;
+  border-radius: 8px 8px 0 0;
 }
 
 .custom-datepicker .p-datepicker-today,
 .custom-datepicker .p-datepicker-current-day {
-  background-color: #b17768;
-  border-radius: 10px;
+  background-color: var(--taupe);
+  border-radius: 50%;
   color: white;
-  font-weight: bold;
+  font-weight: 600;
 }
 
 .custom-datepicker .p-datepicker-next,
@@ -50,54 +69,106 @@ a {
 }
 
 .custom-datepicker .p-datepicker-cell:hover {
-  background-color: var(--taupe);
-  color: white;
+  background-color: var(--blush);
+  color: var(--taupe);
 }
+
 .p-disabled {
-  text-decoration: line-through; /* Style rayé */
-
+  text-decoration: line-through;
+  opacity: 0.45;
 }
+
 .p-datepicker-day-cell:hover {
-  background-color: var(--taupe);
-  border-radius: 10px;
-  color: white;
-}
-@media (min-width: 760px) {
-  .services-container {
-    width: 90%;
-  }
-  .service-card{
-    width: 40%;
-  }
-  .custom-dialog .p-dialog-header {
-    width: 50vw !important;
-  }
-
-  .custom-dialog .p-dialog-content {
-    width: 50vw !important;
-  }
+  background-color: var(--blush) !important;
+  border-radius: 50%;
+  color: var(--taupe) !important;
 }
 
+/* ─────────────────────────────────────────────
+   PrimeVue – Menu popup (burger mobile)
+───────────────────────────────────────────── */
+.p-menu {
+  background-color: var(--white) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-lg) !important;
+  padding: 6px 0 !important;
+  min-width: 200px !important;
+}
+
+.p-menu .p-menuitem-link,
+.p-menu .p-menuitem-content {
+  color: var(--text-dark) !important;
+  padding: 12px 24px !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  border-radius: 0 !important;
+  transition: background-color 0.2s ease, color 0.2s ease !important;
+}
+
+.p-menu .p-menuitem-link:hover,
+.p-menu .p-menuitem-content:hover {
+  background-color: var(--blush) !important;
+  color: var(--taupe) !important;
+}
+
+/* ─────────────────────────────────────────────
+   PrimeVue – Accordion
+───────────────────────────────────────────── */
+.p-accordioncontent-content {
+  border: none !important;
+  background-color: transparent !important;
+}
+
+/* ─────────────────────────────────────────────
+   PrimeVue – DataTable
+───────────────────────────────────────────── */
 .p-datatable .p-datatable-tbody > tr > td {
-  padding: 0.75rem; /* Adapté pour les appareils mobiles */
+  padding: 0.85rem 1rem;
 }
 
 .p-datatable-sm .p-datatable-thead > tr > th {
   color: var(--taupe);
-  font-size: 1rem;
-  font-weight: bold;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 1rem;
 }
 
 .p-datatable-sm .p-datatable-tbody > tr > td {
-  font-size: 0.9rem;
-  color: var(--taupe);
-  background: rgba(245, 223, 198, 0.82);
-  border-bottom: 1px solid var(--taupe);
+  font-size: 0.88rem;
+  color: var(--text-dark);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .p-datatable-sm .p-column-title {
   display: none;
 }
-.p-accordioncontent-content {
-  border: none !important;
+
+/* ─────────────────────────────────────────────
+   PrimeVue – Dialog (responsive)
+───────────────────────────────────────────── */
+@media (min-width: 760px) {
+  .custom-dialog .p-dialog-header {
+    width: 50vw !important;
+  }
+  .custom-dialog .p-dialog-content {
+    width: 50vw !important;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Services / cards – helpers globaux
+───────────────────────────────────────────── */
+@media (min-width: 760px) {
+  .services-container {
+    width: 90%;
+  }
+  .service-card {
+    width: 40%;
+  }
 }

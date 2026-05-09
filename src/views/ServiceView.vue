@@ -18,7 +18,7 @@
       <div class="service-content">
         <div class="service-image">
           <img
-              :src="'http://localhost:8000/images/service/' + service.picture"
+              :src="'https://backoffice.atelier-de-marie.com/images/service/' + service.picture"
               alt="Service image"
           />
         </div>
@@ -153,7 +153,7 @@ const redirectToSignup = () => {
   margin-inline: auto;
 }
 .service-card {
-  background-color: var(--beige);
+  background-color: var(--white);
   border-radius: 8px;
   box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
   width: 100%;
@@ -240,7 +240,7 @@ img {   /* Largeur de l'image à 100% du conteneur */
 }
 
 .custom-dialog .p-dialog-content {
-  background-color: var(--beige);
+  background-color: var(--white);
   color: var(--taupe);
   margin-inline: auto;
   width: 90vw;

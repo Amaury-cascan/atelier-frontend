@@ -1,173 +1,324 @@
 <template>
-  <router-link to="/" class="image-container">
-    <img src="../assets/logo/1.png" alt="L'Atelier de Marie">
-  </router-link>
-  <router-link to="/" class="h1-phone"><h1>L'Atelier de Marie</h1></router-link>
-  <Burger class="burger" />
-  <div class="menu">
-    <router-link to="/" class="h1-full"><h1>L'Atelier de Marie</h1></router-link>
-    <div class="sub-menu">
-      <div v-for="(item, index) in menuItems" :key="index" >
-        <div class="menu-item" @click="handleItemClick($event, item)">
-          {{ item.label }}
-        </div>
+  <nav class="navbar">
+    <!-- Marque -->
+    <div class="nav-brand">
+      <router-link to="/" class="brand-link">
+        <img src="../assets/logo/1.png" alt="L'Atelier de Marie" class="brand-logo">
+        <span class="brand-name">L'Atelier de Marie</span>
+      </router-link>
+    </div>
+
+    <!-- Liens desktop -->
+    <div class="nav-links">
+      <div
+        v-for="(item, index) in menuItems"
+        :key="index"
+        class="nav-item"
+        @click="handleItemClick($event, item)"
+      >
+        {{ item.label }}
       </div>
     </div>
-  </div>
+
+    <!-- Actions droite -->
+    <div class="nav-actions">
+      <!-- CTA desktop uniquement -->
+      <button class="nav-cta nav-cta--desktop" @click="goToBooking">
+        <i class="pi pi-calendar"></i>
+        Prendre RDV
+      </button>
+
+      <!-- Burger mobile uniquement -->
+      <button class="nav-burger" @click="toggleMobileMenu" aria-label="Menu">
+        <span class="burger-line" :class="{ open: mobileMenuOpen }"></span>
+        <span class="burger-line" :class="{ open: mobileMenuOpen }"></span>
+        <span class="burger-line" :class="{ open: mobileMenuOpen }"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Menu mobile déroulant -->
+  <Transition name="menu-drop">
+    <div v-if="mobileMenuOpen" class="mobile-menu">
+      <div
+        v-for="(item, index) in mobileMenuItems"
+        :key="index"
+        class="mobile-menu-item"
+        @click="handleMobileItem(item)"
+      >
+        <i :class="item.icon" class="mobile-menu-icon"></i>
+        {{ item.label }}
+      </div>
+      <div class="mobile-menu-item mobile-menu-item--cta" @click="goToBookingMobile">
+        <i class="pi pi-calendar mobile-menu-icon"></i>
+        Prendre rendez-vous
+      </div>
+    </div>
+  </Transition>
+
+  <!-- Overlay -->
+  <div v-if="mobileMenuOpen" class="mobile-overlay" @click="mobileMenuOpen = false"></div>
 </template>
 
 <script setup lang="ts">
-import Burger from '../components/Burger.vue';
-import {useRouter} from "vue-router";
-import {computed, onMounted, ref, watch} from "vue";
-import {useCategoryStore} from "@/stores/entityStore";
-
+import { useRouter, useRoute } from "vue-router";
+import { computed, ref, watch } from "vue";
 
 const router = useRouter();
-const menu = ref<any>(null);
-const showSubMenu = ref(false);
+const route  = useRoute();
 
-// Détermine si l'utilisateur est connecté
 const isAuthenticated = computed(() => !!localStorage.getItem('token'));
+const mobileMenuOpen  = ref(false);
 
-// Fonction pour générer les éléments du menu en fonction de l'état d'authentification
+// Menu desktop
 const getMenuItems = () => {
-  const items = [
-    { label: 'INSTITUT' },
-    {label: 'PHOTOS'}
+  const items: { label: string }[] = [
+    { label: 'Institut' },
+    { label: 'Galerie' },
   ];
-
-  // Ajoutez "MES RESERVATIONS" si l'utilisateur est authentifié
   if (isAuthenticated.value) {
-    items.push({ label: 'MES RENDEZ-VOUS' });
-    items.push({ label: 'DECONNEXION' });
+    items.push({ label: 'Mes rendez-vous' });
+    items.push({ label: 'Déconnexion' });
   } else {
-    items.push({ label: 'CONNEXION' });
+    items.push({ label: 'Connexion' });
   }
-
   return items;
 };
-
-// Définition des éléments du menu
 const menuItems = ref(getMenuItems());
+watch(isAuthenticated, () => { menuItems.value = getMenuItems(); });
 
-// Watcher sur isAuthenticated pour mettre à jour les éléments du menu
-watch(isAuthenticated, () => {
-  menuItems.value = getMenuItems(); // Met à jour le menuItems en fonction de l'authentification
+// Menu mobile (avec icônes)
+const mobileMenuItems = computed(() => {
+  const items: { label: string; icon: string; route?: string }[] = [
+    { label: 'Institut',  icon: 'pi pi-home',     route: '/'      },
+    { label: 'Galerie',    icon: 'pi pi-images',   route: '/photos' },
+  ];
+  if (isAuthenticated.value) {
+    items.push({ label: 'Mes rendez-vous', icon: 'pi pi-calendar-clock', route: '/mes-rendez-vous' });
+    items.push({ label: 'Déconnexion',     icon: 'pi pi-sign-out' });
+  } else {
+    items.push({ label: 'Connexion', icon: 'pi pi-sign-in', route: '/connexion' });
+  }
+  return items;
 });
 
-// Toggle du menu
-const toggle = (event: MouseEvent) => {
-  if (menu.value) {
-    menu.value.toggle(event);
-  }
-};
+const toggleMobileMenu = () => { mobileMenuOpen.value = !mobileMenuOpen.value; };
 
-// Gestion des clics sur les items
-const handleItemClick = (event: MouseEvent, item: { label: string }) => {
-  // Empêche la fermeture du menu burger lorsqu'on clique sur "PRESTATIONS"
-  if (item.label === 'PRESTATIONS') {
-    event.stopPropagation();
-    showSubMenu.value = !showSubMenu.value;
-  } else if (item.label === 'INSTITUT') {
-    router.push('/'); // Redirection vers la page d'accueil
-  } else if (item.label === 'PHOTOS') {
-    router.push('/photos');
-  }
-  else if (item.label === 'MES RENDEZ-VOUS') {
-    if (isAuthenticated.value) {
-      router.push('/mes-rendez-vous');
-    }
-  } else if (item.label === 'CONNEXION') {
-    window.location.href = '/connexion';
-  } else if (item.label === 'DECONNEXION') {
+const navigate = (label: string) => {
+  if (label === 'déconnexion') {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.href = '/connexion';
-  } else {
-    showSubMenu.value = false; // Ferme la sous-liste si un autre item est cliqué
-    menu.value?.hide(); // Ferme le menu burger après avoir sélectionné un autre item
   }
 };
 
-// Navigation vers une route spécifique
-const navigateTo = (categoryId: number) => {
-  router.push(`/prestation/${categoryId}`); // Redirige vers la route avec l'ID de la catégorie
+const handleItemClick = (_event: MouseEvent, item: { label: string }) => {
+  navigate(item.label.toLowerCase());
+  const label = item.label.toLowerCase();
+  if (label === 'institut') router.push('/');
+  else if (label === 'galerie') router.push('/photos');
+  else if (label === 'mes rendez-vous') router.push('/mes-rendez-vous');
+  else if (label === 'connexion') router.push('/connexion');
+};
+
+const handleMobileItem = (item: { label: string; route?: string }) => {
+  mobileMenuOpen.value = false;
+  const label = item.label.toLowerCase();
+  if (label === 'déconnexion') {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/connexion';
+  } else if (item.route) {
+    router.push(item.route);
+  }
+};
+
+const goToBooking = () => {
+  if (route.path === '/') {
+    const el = document.getElementById('booking');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    router.push({ path: '/', hash: '#booking' });
+  }
+};
+
+const goToBookingMobile = () => {
+  mobileMenuOpen.value = false;
+  goToBooking();
 };
 </script>
 
 <style scoped>
-img {
-  width: 100%;
-  height: 120%;
-  object-fit: cover;
-}
-h1 {
-  color: #a14b33;
-  font-family: "Bona Nova SC", serif;
-}
-
-.image-container {
-  width: 4em; /* Largeur du conteneur */
-  height: 4em; /* Hauteur du conteneur */
+/* ══ Barre principale ══ */
+.navbar {
   display: flex;
   align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  justify-content: space-between;
+  padding: 0 5%;
+  height: 64px;
+  width: 100%;
 }
-.menu{
+
+/* ── Marque ── */
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.brand-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-color);
+  flex-shrink: 0;
+}
+.brand-name {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--text-dark);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+/* ── Liens desktop ── */
+.nav-links {
   display: none;
+  align-items: center;
+  gap: 2.4rem;
+  flex: 1;
+  justify-content: center;
 }
+.nav-item {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding-bottom: 3px;
+  border-bottom: 1.5px solid transparent;
+  transition: color 0.22s ease, border-color 0.22s ease;
+  white-space: nowrap;
+}
+.nav-item:hover { color: var(--taupe); border-bottom-color: var(--taupe); }
+
+/* ── Actions droite ── */
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── CTA desktop ── */
+.nav-cta--desktop {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  background: var(--taupe);
+  color: white;
+  border: none;
+  padding: 9px 20px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.22s ease;
+}
+.nav-cta--desktop:hover { background: var(--taupe-dark); }
+.nav-cta--desktop .pi { font-size: 0.75rem; }
+
+/* ── Burger mobile ── */
+.nav-burger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  flex-shrink: 0;
+}
+.burger-line {
+  display: block;
+  width: 22px;
+  height: 1.5px;
+  background: var(--text-dark);
+  transition: all 0.25s ease;
+  transform-origin: center;
+}
+.burger-line:nth-child(1).open { transform: translateY(6.5px) rotate(45deg); }
+.burger-line:nth-child(2).open { opacity: 0; transform: scaleX(0); }
+.burger-line:nth-child(3).open { transform: translateY(-6.5px) rotate(-45deg); }
+
+/* ══ Menu mobile déroulant ══ */
+.mobile-menu {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  background: var(--white);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 999;
+  box-shadow: var(--shadow-md);
+}
+.mobile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 5%;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dark);
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+.mobile-menu-item:last-child { border-bottom: none; }
+.mobile-menu-item:hover { background: var(--blush); color: var(--taupe); }
+.mobile-menu-item--cta {
+  background: var(--taupe);
+  color: white;
+}
+.mobile-menu-item--cta:hover { background: var(--taupe-dark); color: white; }
+.mobile-menu-icon { font-size: 0.85rem; opacity: 0.7; flex-shrink: 0; }
+.mobile-menu-item--cta .mobile-menu-icon { opacity: 0.9; }
+
+/* Overlay */
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  top: 64px;
+  background: rgba(42, 30, 28, 0.3);
+  z-index: 998;
+}
+
+/* Transition menu */
+.menu-drop-enter-active { transition: all 0.22s ease; }
+.menu-drop-enter-from   { opacity: 0; transform: translateY(-8px); }
+.menu-drop-leave-active { transition: all 0.18s ease; }
+.menu-drop-leave-to     { opacity: 0; transform: translateY(-8px); }
+
+/* ══ Desktop ══ */
 @media (min-width: 760px) {
-  .burger {
-    display: none;
-  }
-  .image-container {
-    display: none;
-  }
-  .h1-phone {
-    display: none;
-  }
-  h1{
-    font-size: 5vw;
-  }
-  .menu{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-  }
-  .menu-item {
-    font-size: 1.5em;
-    color: var(--taupe);
-    text-align: center;
-    cursor: pointer;
-    padding-inline: 5px;
-    width: 15vw;
-    position: relative;
-  }
-  .menu-subitem {
-    color: var(--beige);
-    cursor: pointer;
-    background-color: var(--taupe);
-    border: 1px solid var(--beige);
-    width: 100%;
-  }
-  .sub-menu{
-    border-top: 1px solid var(--taupe);
-    display: flex;
-    justify-content: space-around;
-    width: 100%;
-    gap: 4vw;
-  }
-  .items-prestation{
-    position: absolute;
-    margin-inline: auto;
-    width: 100%;
-    z-index: 1000;
-  }
+  .navbar { height: 72px; padding: 0 6%; }
+  .brand-name { font-size: 1.45rem; }
+  .nav-links { display: flex; }
+  .nav-burger { display: none; }
+  .nav-cta--desktop { display: inline-flex; }
 }
-
-
 </style>

@@ -1,21 +1,20 @@
 <template>
   <div>
-    <!-- Bouton Burger -->
     <Button
-        class="button-burger"
-        outlined
-        type="button"
-        @click="toggle"
-        aria-haspopup="true"
-        aria-controls="overlay_menu"
+      class="button-burger"
+      type="button"
+      @click="toggle"
+      aria-haspopup="true"
+      aria-controls="overlay_menu"
+      aria-label="Menu"
+      text
     >
       <i class="pi pi-align-justify icon-burger"></i>
     </Button>
 
-    <!-- Menu Burger -->
     <Menu ref="menu" id="overlay_menu" :model="menuItems" :popup="true">
       <template #item="{ item }">
-        <div class="menu-item" @click="handleItemClick($event, item)">
+        <div class="burger-item" @click="handleItemClick($event, item)">
           {{ item.label }}
         </div>
       </template>
@@ -33,117 +32,104 @@ import { useCategoryStore } from "@/stores/entityStore";
 
 const router = useRouter();
 const menu = ref<any>(null);
-const showSubMenu = ref(false);
 const categorieStore = useCategoryStore();
-const prestations = ref([]); // Liste des prestations
 const loading = ref(false);
 
-// Fonction exécutée lors de l'initialisation du composant (onMounted)
 onMounted(async () => {
   try {
-    loading.value = true; // Activer le loader pendant la récupération des données
-    prestations.value = await categorieStore.fetchEntities(); // Appel à la fonction du store pour fetch les entités
+    loading.value = true;
+    await categorieStore.fetchEntities();
   } catch (error) {
     console.error("Erreur lors du fetch des entités:", error);
   } finally {
-    loading.value = false; // Désactiver le loader après la récupération des données
+    loading.value = false;
   }
 });
 
-// Détermine si l'utilisateur est connecté
 const isAuthenticated = computed(() => !!localStorage.getItem('token'));
 
-// Fonction pour générer les éléments du menu en fonction de l'état d'authentification
 const getMenuItems = () => {
-  const items = [
-    { label: 'INSTITUT' },
-    {label: 'PHOTOS'}
+  const items: { label: string }[] = [
+    { label: 'Institut' },
+    { label: 'Galerie' },
   ];
-
-  // Ajoutez "MES RESERVATIONS" si l'utilisateur est authentifié
   if (isAuthenticated.value) {
-    items.push({ label: 'MES RENDEZ-VOUS' });
-    items.push({ label: 'DECONNEXION' });
+    items.push({ label: 'Mes rendez-vous' });
+    items.push({ label: 'Déconnexion' });
   } else {
-    items.push({ label: 'CONNEXION' });
+    items.push({ label: 'Connexion' });
   }
-
   return items;
 };
 
-// Définition des éléments du menu
 const menuItems = ref(getMenuItems());
 
-// Watcher sur isAuthenticated pour mettre à jour les éléments du menu
 watch(isAuthenticated, () => {
-  menuItems.value = getMenuItems(); // Met à jour le menuItems en fonction de l'authentification
+  menuItems.value = getMenuItems();
 });
 
-// Toggle du menu
 const toggle = (event: MouseEvent) => {
   if (menu.value) {
     menu.value.toggle(event);
   }
 };
 
-// Gestion des clics sur les items
-const handleItemClick = (event: MouseEvent, item: { label: string }) => {
-  // Empêche la fermeture du menu burger lorsqu'on clique sur "PRESTATIONS"
-  if (item.label === 'PRESTATIONS') {
-    event.stopPropagation();
-    showSubMenu.value = !showSubMenu.value;
-  } else if (item.label === 'INSTITUT') {
-    router.push('/'); // Redirection vers la page d'accueil
-  } else if (item.label === 'PHOTOS') {
+const handleItemClick = (_event: MouseEvent, item: { label: string }) => {
+  const label = item.label.toLowerCase();
+  if (label === 'institut') {
+    router.push('/');
+  } else if (label === 'galerie') {
     router.push('/photos');
-  }
-  else if (item.label === 'MES RENDEZ-VOUS') {
-  if (isAuthenticated.value) {
-    router.push('/mes-rendez-vous');
-  }
-  } else if (item.label === 'CONNEXION') {
+  } else if (label === 'mes rendez-vous') {
+    if (isAuthenticated.value) router.push('/mes-rendez-vous');
+  } else if (label === 'connexion') {
     window.location.href = '/connexion';
-  } else if (item.label === 'DECONNEXION') {
+  } else if (label === 'déconnexion') {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.href = '/connexion';
-  } else {
-    showSubMenu.value = false; // Ferme la sous-liste si un autre item est cliqué
-    menu.value?.hide(); // Ferme le menu burger après avoir sélectionné un autre item
   }
-};
-
-// Navigation vers une route spécifique
-const navigateTo = (categoryId: number) => {
-  router.push(`/prestation/${categoryId}`); // Redirige vers la route avec l'ID de la catégorie
+  menu.value?.hide();
 };
 </script>
 
 <style scoped>
-/* Style du bouton burger */
 .button-burger {
-  border: none;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  padding: 8px !important;
+  color: var(--text-dark) !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--taupe);
-  background-color: var(--beige);
-  cursor: pointer;
+}
+
+.button-burger:hover {
+  background: var(--blush) !important;
+  border-radius: 8px !important;
 }
 
 .icon-burger {
-  font-size: 30px;
+  font-size: 20px;
+  color: var(--text-dark);
 }
 
-/* Style des items du menu */
-.menu-item {
-  font-size: 1.5em;
-  color: var(--taupe);
-  text-align: center;
-  border: 1px solid var(--taupe);
-  background-color: var(--beige);
+.burger-item {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dark);
+  padding: 13px 24px;
   cursor: pointer;
-  padding-inline: 5px;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+.burger-item:hover {
+  background-color: var(--blush);
+  color: var(--taupe);
+}
 </style>

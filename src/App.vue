@@ -1,13 +1,12 @@
-
 <template>
-  <div class="container-app">
-    <header>
+  <div class="app-wrapper">
+    <header class="site-header">
       <Navigation/>
     </header>
-    <main>
+    <main class="site-main">
       <router-view/>
     </main>
-    <footer>
+    <footer class="site-footer">
       <FooterLayout/>
     </footer>
   </div>
@@ -20,7 +19,6 @@ import { onMounted, onUnmounted } from "vue";
 
 let intervalId: number | null = null;
 
-// Vérifie si le `localStorage` a expiré
 const checkStorageExpiry = () => {
   const expiryTime = localStorage.getItem("expiryTime");
   if (expiryTime && Date.now() > Number(expiryTime)) {
@@ -29,10 +27,9 @@ const checkStorageExpiry = () => {
   }
 };
 
-
 onMounted(() => {
   checkStorageExpiry();
-  intervalId = setInterval(checkStorageExpiry, 10 * 60 *  1000); // Vérifie toutes les 10 min
+  intervalId = setInterval(checkStorageExpiry, 10 * 60 * 1000);
 });
 
 onUnmounted(() => {
@@ -42,34 +39,34 @@ onUnmounted(() => {
 });
 </script>
 
-
 <style scoped>
-  .container-app {
-    min-width: 100vw;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
+.app-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--cream);
+}
 
-  header {
-    height: fit-content;
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    border-bottom: 2px solid var(--taupe);
-    margin-inline: auto;
-    width: 100%;
-  }
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background-color: rgba(253, 250, 248, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    0 1px 0 rgba(166, 124, 136, 0.12),
+    0 4px 24px rgba(44, 36, 34, 0.05);
+  width: 100%;
+}
 
-  @media (min-width: 760px) {
-    .container-app {
-      width: 100vw;
-      margin: 0 auto;
-      background-color: var(--beige);
-    }
-    header{
-      width: 90%;
-    }
-  }
+.site-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.site-footer {
+  margin-top: auto;
+}
 </style>

@@ -1,56 +1,36 @@
-/* color palette from <https://github.com/vuejs/theme> */
 :root {
-  --vt-c-white: #ffffff;
-  --vt-c-white-soft: #f8f8f8;
-  --vt-c-white-mute: #f2f2f2;
-  --beige: #f5dfc6;
-  --taupe: rgb(162, 78, 50);
-  --accent-color: #e74c3c; /* Rouge */
+  /* ── Rose antique poudreuse – le meilleur des deux mondes ── */
+  --taupe: #AE7870;            /* rose antique chaude : ni mauve ni terracotta */
+  --taupe-light: #C99C96;      /* variante claire */
+  --taupe-dark: #7E524C;       /* variante foncée (hover) */
+  --gold: #C4A472;             /* or cuivré rosé */
 
-  --vt-c-black: #181818;
-  --vt-c-black-soft: #222222;
-  --vt-c-black-mute: #282828;
+  /* ── Arrière-plans ── */
+  --white: #FFFFFF;
+  --cream: #FDF8F6;            /* ivoire à peine rosé */
+  --blush: #F5EAE6;            /* blush poudré très doux */
 
-  --vt-c-indigo: #2c3e50;
+  /* ── Texte ── */
+  --text-dark: #2A1E1C;        /* brun charbon profond */
+  --text-muted: #8A6E6A;       /* rose brun atténué */
 
-  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
-  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
-  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
-  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
+  /* ── Bordures ── */
+  --border-color: rgba(174, 120, 112, 0.18);
+  --border-strong: rgba(174, 120, 112, 0.40);
 
-  --vt-c-text-light-1: var(--vt-c-indigo);
-  --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
-  --vt-c-text-dark-1: var(--vt-c-white);
-  --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
-}
+  /* ── Ombres ── */
+  --shadow-sm: 0 2px 10px rgba(42, 30, 28, 0.06);
+  --shadow-md: 0 4px 24px rgba(42, 30, 28, 0.10);
+  --shadow-lg: 0 8px 48px rgba(42, 30, 28, 0.15);
 
-/* semantic color variables for this project */
-:root {
-  --color-background: var(--vt-c-white);
-  --color-background-soft: var(--vt-c-white-soft);
-  --color-background-mute: var(--vt-c-white-mute);
-
-  --color-border: var(--vt-c-divider-light-2);
-  --color-border-hover: var(--vt-c-divider-light-1);
-
-  --color-heading: var(--vt-c-text-light-1);
-  --color-text: var(--vt-c-text-light-1);
-
-  --section-gap: 160px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
-
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
-
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-2);
-  }
+  /* ── Compatibilité legacy ── */
+  --color-background: var(--cream);
+  --color-background-soft: var(--blush);
+  --color-background-mute: #EDE0DC;
+  --color-text: var(--text-dark);
+  --color-heading: var(--text-dark);
+  --color-border: var(--border-color);
+  --section-gap: 80px;
 }
 
 *,
@@ -61,52 +41,61 @@
   font-weight: normal;
 }
 
+html {
+  overflow-x: clip;
+}
+
 body {
   min-height: 100vh;
-  color: var(--color-text);
-  background: var(--color-background);
-  transition:
-    color 0.5s,
-    background-color 0.5s;
-  line-height: 1.6;
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Fira Sans',
-    'Droid Sans',
-    'Helvetica Neue',
-    sans-serif;
-  font-size: 0.8em;
+  color: var(--text-dark);
+  background: var(--cream);
+  transition: color 0.5s, background-color 0.5s;
+  line-height: 1.7;
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 1rem;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ── Surcharges Dialog PrimeVue ── */
+.custom-dialog.p-dialog {
+  border-radius: 0 !important;
+  overflow: hidden !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
 .custom-dialog .p-dialog-header {
   background-color: var(--taupe) !important;
-  margin-inline: auto !important;
   color: white !important;
-  font-size: 1.2em !important;
-  width: 90vw !important;
-  padding: 15px !important;
-  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px !important;
-  border-top-left-radius: 10px !important;
-  border-top-right-radius: 10px !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+  padding: 20px 28px !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.custom-dialog .p-dialog-header .p-dialog-title {
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+}
+
+.custom-dialog .p-dialog-header-icon {
+  color: rgba(255,255,255,0.8) !important;
+  border-radius: 0 !important;
+}
+.custom-dialog .p-dialog-header-icon:hover {
+  background: rgba(255,255,255,0.15) !important;
 }
 
 .custom-dialog .p-dialog-content {
-  background-color: var(--beige) !important;
-  color: var(--taupe) !important;
-  margin-inline: auto !important;
-  width: 90vw !important;
-  font-size: 1.2em !important;
-  box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px!important;
-  padding: 15px !important;
-  border-bottom-left-radius: 10px !important;
-  border-bottom-right-radius: 10px !important;
+  background-color: var(--white) !important;
+  color: var(--text-dark) !important;
+  padding: 32px 28px !important;
+  border-radius: 0 !important;
 }

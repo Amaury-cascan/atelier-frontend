@@ -1,124 +1,204 @@
 <template>
-  <div class="picture">
-    <img src="../../assets/pictures/atelier.jpg" alt="Image de l'institut">
-  </div>
-  <div class="presentation">
-    <div class="text-presentation">
-      <h1>Bienvenue à L'Atelier de Marie</h1>
-      <div class="text">
-        <p>Votre nouveau salon de beauté au coeur de la Sologne.</p>
-        <p>Ici, chaque cliente est traitée avec soin et attention.</p>
-        <p>Entrez dans un univers chaleureux et cosy où votre beauté est notre priorité.</p>
-        <p>Marie à hâte de vous accueillir à l'Atelier</p>
-        <p><a @click="redirectToLogin" class="info">Inscrivez-vous pour profiter de la possibilité de prendre des rendez-vous.</a></p>
-      </div>
+  <!-- ── Hero plein écran ── -->
+  <section class="hero">
+    <div class="hero-visual">
+      <img src="../../assets/pictures/atelier.jpg" alt="L'Atelier de Marie">
+      <div class="hero-overlay"></div>
     </div>
-    <div class="picture-full">
-      <img src="../../assets/pictures/atelier.jpg" alt="Image de l'institut">
+    <div class="hero-content">
+      <p class="hero-eyebrow">Bienvenue à</p>
+      <h1 class="hero-title">L'Atelier de Marie</h1>
+      <p class="hero-tagline">Votre salon de beauté au cœur de la Sologne</p>
+      <p class="hero-desc">
+        Ici, chaque cliente est traitée avec soin et attention,
+        dans un univers chaleureux et cosy où votre beauté est notre priorité.
+      </p>
+      <button @click="scrollToBooking" class="hero-cta">Prendre rendez-vous</button>
     </div>
+  </section>
+
+  <!-- ── Bandeau citation ── -->
+  <div class="intro-strip">
+    <p class="intro-text">
+      <a @click="scrollToBooking" class="intro-link">Découvrir nos prestations</a>
+    </p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useRouter} from "vue-router";
-
-const router = useRouter();
-
-const redirectToLogin = () => {
-  router.push({ name: 'inscription' });
+const scrollToBooking = () => {
+  const el = document.getElementById('booking');
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 };
 </script>
 
 <style scoped>
-.picture {
-  border-bottom: 2px solid var(--taupe);
+/* ─────────────────────────────────────────────
+   Hero
+───────────────────────────────────────────── */
+.hero {
+  position: relative;
+  width: 100%;
+  height: 72vh;
+  min-height: 460px;
   overflow: hidden;
-  height: 35vh;
-  display: flex; /* Ajout de cette ligne */
-  align-items: center; /* Centrer verticalement */
-  justify-content: center; /* Centrer horizontalement */
-}
-
-img {
-  object-fit: cover; /* Modifiez ici */
-  min-width: 100%; /* Ajoutez cette ligne pour empêcher l'étirement */
   display: flex;
   align-items: center;
   justify-content: center;
+}
 
+.hero-visual {
+  position: absolute;
+  inset: 0;
 }
-.presentation {
-  border-bottom: 2px solid var(--taupe);
-  margin-bottom: 25px;
+
+.hero-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
-h1,p{
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    155deg,
+    rgba(44, 36, 34, 0.62) 0%,
+    rgba(166, 124, 136, 0.38) 100%
+  );
+}
+
+/* ─────────────────────────────────────────────
+   Contenu hero
+───────────────────────────────────────────── */
+.hero-content {
+  position: relative;
+  z-index: 1;
   text-align: center;
-  color: var(--taupe);
-  margin-bottom: 0.2rem;
+  padding: 0 24px;
+  max-width: 680px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
 }
-p {
-  font-size: 1.2em;
+
+.hero-eyebrow {
+  font-family: 'Tangerine', cursive;
+  font-size: 2.6rem;
+  font-weight: 400;
+  opacity: 0.92;
+  letter-spacing: 0.04em;
+  margin-bottom: -0.4rem;
+  line-height: 1;
 }
-.text {
-  width: 90%;
-  margin: 0 auto;
+
+.hero-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2.6rem, 9vw, 5.2rem);
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  color: white;
+  line-height: 1.08;
+  margin-bottom: 1.2rem;
 }
-a {
+
+.hero-tagline {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  opacity: 0.8;
+  margin-bottom: 1rem;
+}
+
+.hero-desc {
+  font-size: 0.9rem;
+  line-height: 1.75;
+  opacity: 0.75;
+  font-style: italic;
+  margin-bottom: 2.2rem;
+  max-width: 520px;
+}
+
+.hero-cta {
+  display: inline-block;
+  background: transparent;
+  color: white;
+  border: 1.5px solid rgba(255, 255, 255, 0.65);
+  padding: 14px 40px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 0;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.hero-cta:hover {
+  background: white;
+  color: var(--text-dark);
+  border-color: white;
+}
+
+/* ─────────────────────────────────────────────
+   Bandeau intro
+───────────────────────────────────────────── */
+.intro-strip {
+  background-color: var(--blush);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  padding: 14px 24px;
+  text-align: center;
+}
+
+.intro-text {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  font-style: italic;
+}
+
+.intro-link {
   color: var(--taupe);
   text-decoration: underline;
+  text-underline-offset: 3px;
   cursor: pointer;
-  font-style: oblique;
-  font-size: 1em;
-  text-align: center;
+  font-style: normal;
+  font-weight: 500;
+  transition: color 0.2s ease;
 }
-.picture-full{
-  display: none;
+
+.intro-link:hover {
+  color: var(--taupe-dark);
 }
+
+/* ─────────────────────────────────────────────
+   Responsive
+───────────────────────────────────────────── */
 @media (min-width: 760px) {
-  .picture {
-  display: none;
-  }
-  .picture-full{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    height: 35vh;
-    padding: 1vh;
-  }
-  img {
-    height: 100%;
-    border-radius: 10px;
-    box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+  .hero {
+    height: 88vh;
+    min-height: 580px;
   }
 
-  .presentation {
-    display: flex;
-    justify-content: space-around;
-    width: 90%;
-    margin-inline: auto;
-    height: fit-content;
+  .hero-eyebrow {
+    font-size: 3.6rem;
   }
-  .text{
-    margin: 0;
+
+  .intro-strip {
+    padding: 16px 24px;
   }
-  h1{
-    font-size: 2.5vw;
-    text-align: start;
-  }
-  p {
-    font-size: 1.2em;
-    text-align: start;
-  }
-  a {
-    font-size: 0.8em;
-    text-align: start;
-  }
-  .text-presentation{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+
+  .intro-text {
+    font-size: 0.88rem;
   }
 }
 </style>
-
