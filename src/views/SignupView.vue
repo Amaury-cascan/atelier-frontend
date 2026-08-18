@@ -71,6 +71,16 @@
           </div>
         </div>
 
+        <label class="consent">
+          <input type="checkbox" v-model="privacyAccepted" />
+          <span>
+            J'ai lu et j'accepte les
+            <router-link to="/mentions-legales" target="_blank">mentions légales</router-link>
+            et la
+            <router-link to="/politique-de-confidentialite" target="_blank">politique de confidentialité</router-link>.
+          </span>
+        </label>
+
         <p v-if="error" class="msg msg--error">{{ error }}</p>
 
         <button type="submit" class="btn-submit" :disabled="loading">
@@ -107,6 +117,7 @@ const emailValue          = ref('');
 const phoneNumberValue    = ref('');
 const passwordValue       = ref('');
 const confirmPasswordValue = ref('');
+const privacyAccepted = ref(false);
 const loading  = ref(false);
 const error    = ref('');
 const showPwd  = ref(false);
@@ -123,6 +134,10 @@ const register = async () => {
     error.value = 'Veuillez entrer un e-mail valide.';
     return;
   }
+  if (!privacyAccepted.value) {
+    error.value = 'Vous devez accepter les mentions légales et la politique de confidentialité pour créer un compte.';
+    return;
+  }
 
   loading.value = true;
   try {
@@ -132,6 +147,7 @@ const register = async () => {
       email: emailValue.value,
       password: passwordValue.value,
       phoneNumber: phoneNumberValue.value,
+      privacyPolicyAccepted: true,
     });
     await authStore.signin({ username: emailValue.value, password: passwordValue.value });
     const storedRoute = localStorage.getItem('desiredRoute');
@@ -238,6 +254,27 @@ const register = async () => {
   transition: color 0.2s ease;
 }
 .toggle-eye:hover { color: var(--taupe); }
+
+.consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.consent input {
+  margin-top: 3px;
+  flex-shrink: 0;
+  accent-color: var(--taupe);
+}
+.consent a {
+  color: var(--taupe);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.consent a:hover { color: var(--taupe-dark); }
 
 /* ── Erreur ── */
 .msg { font-size: 0.8rem; padding: 10px 14px; }

@@ -35,6 +35,11 @@
 
     <div class="footer-bottom">
       <p>© {{ new Date().getFullYear() }} L'Atelier de Marie — Tous droits réservés</p>
+      <nav class="footer-legal" aria-label="Informations légales">
+        <router-link to="/mentions-legales">Mentions légales</router-link>
+        <span aria-hidden="true">·</span>
+        <router-link to="/politique-de-confidentialite">Politique de confidentialité</router-link>
+      </nav>
     </div>
   </footer>
 </template>
@@ -142,6 +147,10 @@
   border-top: 1px solid var(--border-color);
   padding: 12px 5%;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 .footer-bottom p {
   font-size: 0.62rem;
@@ -149,6 +158,28 @@
   text-transform: uppercase;
   color: var(--text-muted);
   opacity: 0.6;
+}
+.footer-legal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.footer-legal a {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.footer-legal a:hover {
+  color: var(--taupe);
+}
+.footer-legal span {
+  color: var(--text-muted);
+  opacity: 0.5;
 }
 
 /* ── Mobile : empilement vertical centré ── */

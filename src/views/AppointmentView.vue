@@ -90,23 +90,25 @@ import { useRouter } from "vue-router";
 interface Appointment {
   date: string;
   service: string;
-  user: number;
 }
 
 const router      = useRouter();
 const appointments = ref<Appointment[]>([]);
 const loading      = ref(true);
 
-const user   = JSON.parse(localStorage.getItem('user') || '{}');
-const userId = user.id;
+const token = localStorage.getItem('token') ?? '';
 
 // ── Fetch ──
 const fetchAppointments = async () => {
   try {
     const response = await axios.get(
-      'https://backoffice.atelier-de-marie.com/api/appointment/list'
+      'https://backoffice.atelier-de-marie.com/api/appointment/user',
+      { headers: { Authorization: `Bearer ${token}` } }
     );
-    appointments.value = response.data.appointments;
+    // L'endpoint /user retourne "serviceName", on normalise en "service"
+    appointments.value = (response.data.appointments ?? []).map(
+      (a: { date: string; serviceName: string }) => ({ ...a, service: a.serviceName })
+    );
   } catch (e) {
     console.error('Erreur récupération RDV :', e);
   } finally {
@@ -119,7 +121,7 @@ const upcomingAppointments = computed(() => {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
   return appointments.value
-    .filter((a) => a.user === userId && new Date(a.date) >= now)
+    .filter((a) => new Date(a.date) >= now)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 });
 
