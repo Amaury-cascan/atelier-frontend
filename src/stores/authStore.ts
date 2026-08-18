@@ -47,7 +47,7 @@ export const useAuthStore = defineStore('auth', {
             this.loading = true;
             this.error = null;
             try {
-                const response = await axios.post(`https://backoffice.atelier-de-marie.com/api/login_check`, credentials, { withCredentials: true });
+                const response = await axios.post(`https://backoffice.atelier-de-marie.com/api/login_check`, credentials);
 
                 this.token = response.data.token;
                 localStorage.setItem('token', this.token);

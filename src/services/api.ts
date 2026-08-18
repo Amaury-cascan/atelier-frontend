@@ -6,7 +6,8 @@ const axiosInstance= axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
-    withCredentials: true
+    // JWT envoyé en header Authorization, pas de cookie cross-site.
+    withCredentials: false
 });
 
 axiosInstance.interceptors.request.use(
