@@ -1,7 +1,6 @@
 import axiosInstance from '@/services/api';
-import { API_BASE } from '@/utils/auth';
 
-const IMAGE_BASE = API_BASE.replace(/\/api\/?$/, '/images/service/');
+const IMAGE_BASE = 'https://backoffice.atelier-de-marie.com/images/service/';
 
 
 export function imageUrl(filename?: string | null): string {

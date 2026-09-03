@@ -35,7 +35,4 @@ export function buildUserFromToken(token: string, emailFallback: string) {
   };
 }
 
-/** En local : VITE_API_BASE dans `.env.development` (ex. http://localhost:8080/api/). */
-export const API_BASE = (
-  import.meta.env.VITE_API_BASE || 'https://backoffice.atelier-de-marie.com/api/'
-).replace(/\/?$/, '/');
+export const API_BASE = 'https://backoffice.atelier-de-marie.com/api/';
