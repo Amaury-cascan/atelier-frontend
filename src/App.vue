@@ -1,21 +1,34 @@
 <template>
   <div class="app-wrapper">
-    <header class="site-header">
-      <Navigation/>
-    </header>
-    <main class="site-main">
-      <router-view/>
-    </main>
-    <footer class="site-footer">
-      <FooterLayout/>
-    </footer>
+    <template v-if="isAdminShell">
+      <router-view />
+    </template>
+    <template v-else>
+      <header class="site-header">
+        <Navigation />
+      </header>
+      <main class="site-main">
+        <router-view />
+      </main>
+      <footer class="site-footer">
+        <FooterLayout />
+      </footer>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
 import Navigation from "./layout/Navigation.vue";
 import FooterLayout from "@/layout/FooterLayout.vue";
-import { onMounted, onUnmounted } from "vue";
+import { computed, onMounted, onUnmounted } from "vue";
+import { useRoute } from "vue-router";
+import { useAuthStore } from "@/stores/authStore";
+
+const route = useRoute();
+const auth = useAuthStore();
+auth.hydrateFromStorage();
+
+const isAdminShell = computed(() => route.matched.some((r) => r.meta.isAdminShell));
 
 let intervalId: number | null = null;
 
@@ -25,6 +38,7 @@ const checkStorageExpiry = () => {
   const expiryTime = localStorage.getItem("expiryTime");
   if (expiryTime && Date.now() > Number(expiryTime)) {
     AUTH_KEYS.forEach((key) => localStorage.removeItem(key));
+    auth.hydrateFromStorage();
   }
 };
 

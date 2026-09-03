@@ -63,20 +63,26 @@
 <script setup lang="ts">
 import { useRouter, useRoute } from "vue-router";
 import { computed, ref, watch } from "vue";
+import { useAuthStore } from "@/stores/authStore";
 
 const router = useRouter();
 const route  = useRoute();
+const auth = useAuthStore();
+auth.hydrateFromStorage();
 
-const isAuthenticated = computed(() => !!localStorage.getItem('token'));
+const isAuthenticated = computed(() => auth.isAuthenticated);
+const isAdmin = computed(() => auth.isAdmin);
 const mobileMenuOpen  = ref(false);
 
-// Menu desktop
 const getMenuItems = () => {
   const items: { label: string }[] = [
     { label: 'Institut' },
     { label: 'Galerie' },
   ];
   if (isAuthenticated.value) {
+    if (isAdmin.value) {
+      items.push({ label: 'Administration' });
+    }
     items.push({ label: 'Mes rendez-vous' });
     items.push({ label: 'Déconnexion' });
   } else {
@@ -85,15 +91,17 @@ const getMenuItems = () => {
   return items;
 };
 const menuItems = ref(getMenuItems());
-watch(isAuthenticated, () => { menuItems.value = getMenuItems(); });
+watch([isAuthenticated, isAdmin], () => { menuItems.value = getMenuItems(); });
 
-// Menu mobile (avec icônes)
 const mobileMenuItems = computed(() => {
   const items: { label: string; icon: string; route?: string }[] = [
     { label: 'Institut',  icon: 'pi pi-home',     route: '/'      },
     { label: 'Galerie',    icon: 'pi pi-images',   route: '/photos' },
   ];
   if (isAuthenticated.value) {
+    if (isAdmin.value) {
+      items.push({ label: 'Administration', icon: 'pi pi-cog', route: '/admin' });
+    }
     items.push({ label: 'Mes rendez-vous', icon: 'pi pi-calendar-clock', route: '/mes-rendez-vous' });
     items.push({ label: 'Déconnexion',     icon: 'pi pi-sign-out' });
   } else {
@@ -104,30 +112,33 @@ const mobileMenuItems = computed(() => {
 
 const toggleMobileMenu = () => { mobileMenuOpen.value = !mobileMenuOpen.value; };
 
-const navigate = (label: string) => {
-  if (label === 'déconnexion') {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/connexion';
-  }
+const logout = async () => {
+  await auth.signout();
+  router.push({ name: 'connexion' });
 };
 
 const handleItemClick = (_event: MouseEvent, item: { label: string }) => {
-  navigate(item.label.toLowerCase());
   const label = item.label.toLowerCase();
-  if (label === 'institut') router.push('/');
-  else if (label === 'galerie') router.push('/photos');
-  else if (label === 'mes rendez-vous') router.push('/mes-rendez-vous');
-  else if (label === 'connexion') router.push('/connexion');
+  if (label === 'déconnexion') {
+    logout();
+  } else if (label === 'institut') {
+    router.push('/');
+  } else if (label === 'galerie') {
+    router.push('/photos');
+  } else if (label === 'administration') {
+    router.push('/admin');
+  } else if (label === 'mes rendez-vous') {
+    router.push('/mes-rendez-vous');
+  } else if (label === 'connexion') {
+    router.push('/connexion');
+  }
 };
 
 const handleMobileItem = (item: { label: string; route?: string }) => {
   mobileMenuOpen.value = false;
   const label = item.label.toLowerCase();
   if (label === 'déconnexion') {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/connexion';
+    logout();
   } else if (item.route) {
     router.push(item.route);
   }

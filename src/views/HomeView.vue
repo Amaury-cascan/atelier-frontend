@@ -272,23 +272,19 @@ const photosLoading = ref(true);
 const shuffled = (arr: Photo[]) => [...arr].sort(() => Math.random() - 0.5);
 const goToGallery = () => router.push({ name: 'photos' });
 
-// ── Horaires ──
-const RAW_SCHEDULE = [
-  { day: 'Dimanche', jsDay: 0, hours: null,                   special: false },
-  { day: 'Lundi',    jsDay: 1, hours: '09h30 – 16h00 · 18h30 – 20h00', special: false },
-  { day: 'Mardi',    jsDay: 2, hours: 'Prestation extérieure', special: true  },
-  { day: 'Mercredi', jsDay: 3, hours: null,                   special: false },
-  { day: 'Jeudi',    jsDay: 4, hours: 'Prestation extérieure', special: true  },
-  { day: 'Vendredi', jsDay: 5, hours: '09h30 – 20h00',         special: false },
-  { day: 'Samedi',   jsDay: 6, hours: '09h30 – 20h00',         special: false },
-];
+import { WEEKLY_SCHEDULE } from '@/utils/openingHours';
 
+// ── Horaires (source unique : openingHours.ts) ──
 const todayJs = new Date().getDay();
 
-const SCHEDULE = RAW_SCHEDULE.map((entry) => ({
-  ...entry,
+const SCHEDULE = WEEKLY_SCHEDULE.map((entry) => ({
+  day: entry.label,
+  jsDay: entry.jsDay,
+  // Affiché sur le site : Fermé / Extérieur / plages horaires
+  hours: entry.display === 'Fermé' ? null : entry.display,
+  special: entry.special,
   isToday: entry.jsDay === todayJs,
-  display: entry.hours ?? 'Fermé',
+  display: entry.display,
 }));
 
 const todayEntry = SCHEDULE.find((e) => e.isToday)!;

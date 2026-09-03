@@ -66,7 +66,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { normalizeEmail, normalizePassword } from '@/utils/auth';
 
 const emailValue = ref('');
@@ -74,6 +74,7 @@ const passwordValue = ref('');
 const showPwd = ref(false);
 const authStore = useAuthStore();
 const router = useRouter();
+const route = useRoute();
 const loading = ref(false);
 const error = ref('');
 
@@ -97,13 +98,26 @@ const login = async () => {
   try {
     await authStore.signin({ username, password });
     localStorage.setItem("expiryTime", (Date.now() + 30 * 60 * 1000).toString());
+
     const storedRoute = localStorage.getItem('desiredRoute');
     if (storedRoute) {
       router.push(JSON.parse(storedRoute));
       localStorage.removeItem('desiredRoute');
-    } else {
-      window.location.href = '/';
+      return;
     }
+
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '';
+    if (redirect.startsWith('/')) {
+      await router.push(redirect);
+      return;
+    }
+
+    if (authStore.isAdmin) {
+      await router.push({ name: 'admin-dashboard' });
+      return;
+    }
+
+    await router.push({ name: 'home' });
   } catch {
     error.value = authStore.error || 'Une erreur est survenue. Veuillez réessayer.';
   } finally {
