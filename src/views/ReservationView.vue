@@ -65,7 +65,7 @@
               <div v-else class="slots-grid">
                 <button
                   v-for="slot in availableSlots"
-                  :key="slot.value"
+                  :key="slot.value || ''"
                   class="slot-btn"
                   :class="{ 'slot-btn--active': reservation.time === slot.value }"
                   @click="selectTime(slot.value)"

@@ -19,11 +19,12 @@ import { onMounted, onUnmounted } from "vue";
 
 let intervalId: number | null = null;
 
+const AUTH_KEYS = ['token', 'user', 'expiryTime', 'user_role', 'user_id'];
+
 const checkStorageExpiry = () => {
   const expiryTime = localStorage.getItem("expiryTime");
   if (expiryTime && Date.now() > Number(expiryTime)) {
-    localStorage.clear();
-    window.location.href = window.location.href;
+    AUTH_KEYS.forEach((key) => localStorage.removeItem(key));
   }
 };
 

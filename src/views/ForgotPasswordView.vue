@@ -54,6 +54,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { requestPasswordReset } from '@/services/api';
+import { clearStaleAuth, normalizeEmail } from '@/utils/auth';
 
 const email   = ref('');
 const loading = ref(false);
@@ -65,8 +66,18 @@ const handleSubmit = async () => {
   loading.value = true;
   message.value = '';
   isError.value = false;
+
+  const normalizedEmail = normalizeEmail(email.value);
+  if (!normalizedEmail) {
+    isError.value = true;
+    message.value = 'Veuillez renseigner votre adresse e-mail.';
+    loading.value = false;
+    return;
+  }
+
   try {
-    await requestPasswordReset(email.value);
+    clearStaleAuth();
+    await requestPasswordReset(normalizedEmail);
     message.value = 'Si un compte est associé à cette adresse, un e-mail de réinitialisation a été envoyé. Vérifiez vos courriers indésirables.';
     sent.value = true;
   } catch (error: any) {
@@ -141,11 +152,14 @@ const handleSubmit = async () => {
   border-radius: 0;
   padding: 11px 14px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 0.88rem;
+  font-size: 16px;
   color: var(--text-dark);
   background: var(--cream);
   outline: none;
   transition: border-color 0.2s ease;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
 }
 .field-input:focus { border-color: var(--taupe); }
 
