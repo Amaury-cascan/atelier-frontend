@@ -6,10 +6,11 @@ const axiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
+  // false : compatible avec CORS allow_origin *. JWT via Authorization.
+  withCredentials: false,
 });
 
-const PUBLIC_AUTH_PATHS = [
+const PUBLIC_API_PATHS = [
   'login_check',
   'signup',
   'password-reset/request',
@@ -18,17 +19,21 @@ const PUBLIC_AUTH_PATHS = [
   'forgot-password',
   'reset-password',
   'verify/',
+  // Catalogue public : un JWT expiré ne doit PAS faire échouer ces GET (401 Lexik)
+  'services',
+  'categories',
+  'picture-presentation',
+  'appointment/list',
 ];
 
-function isPublicAuthRequest(url?: string): boolean {
+function isPublicApiRequest(url?: string): boolean {
   if (!url) return false;
-  return PUBLIC_AUTH_PATHS.some((path) => url.includes(path));
+  return PUBLIC_API_PATHS.some((path) => url.includes(path));
 }
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Ne pas envoyer un vieux JWT sur les routes publiques (login, reset mdp…)
-    if (isPublicAuthRequest(config.url)) {
+    if (isPublicApiRequest(config.url)) {
       delete config.headers.Authorization;
     } else {
       const token = localStorage.getItem('token');

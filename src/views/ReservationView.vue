@@ -25,12 +25,14 @@
         <div class="col-calendar">
           <p class="col-label">Choisissez une date</p>
           <ModernCalendar
+            ref="calendarRef"
             v-model="reservation.date"
             :disabledDays="daysDisabled"
             :minDate="new Date()"
             :service="service"
             :appointments="appointments"
             :showPopup="false"
+            @date-select="onDateSelect"
             @slots-available="onSlotsAvailable"
           />
         </div>
@@ -54,6 +56,12 @@
                 <p class="slots-date">{{ formattedDate }}</p>
               </div>
 
+              <!-- Créneau refusé par le serveur, ou erreur de réservation -->
+              <div v-if="bookingError" class="booking-error">
+                <i class="pi pi-exclamation-triangle"></i>
+                <span>{{ bookingError }}</span>
+              </div>
+
               <!-- Aucun créneau -->
               <div v-if="availableSlots.length === 0" class="no-slots">
                 <i class="pi pi-calendar-times no-slots-icon"></i>
@@ -62,7 +70,7 @@
               </div>
 
               <!-- Grille créneaux -->
-              <div v-else class="slots-grid">
+              <div v-else class="slots-grid" :class="{ 'slots-grid--refreshing': refreshing }">
                 <button
                   v-for="slot in availableSlots"
                   :key="slot.value || ''"
@@ -85,8 +93,9 @@
                       <span>{{ service.duration }}&nbsp;min</span>
                     </div>
                   </div>
-                  <button class="btn-confirm" @click="submitReservation">
-                    <i class="pi pi-check"></i> Confirmer la réservation
+                  <button class="btn-confirm" :disabled="submitting || refreshing" @click="submitReservation">
+                    <i :class="submitting ? 'pi pi-spinner pi-spin' : 'pi pi-check'"></i>
+                    {{ submitting ? 'Réservation en cours…' : 'Confirmer la réservation' }}
                   </button>
                   <button class="btn-change" @click="reservation.time = ''">
                     Modifier l'horaire
@@ -152,6 +161,10 @@ const appointments  = ref<Appointment[]>([]);
 const showDialog    = ref(false);
 const availableSlots = ref<TimeSlot[]>([]);
 const slotsColRef   = ref<HTMLElement | null>(null);
+const calendarRef   = ref<InstanceType<typeof ModernCalendar> | null>(null);
+const refreshing    = ref(false);
+const submitting    = ref(false);
+const bookingError  = ref('');
 
 const formattedDate = computed(() => {
   if (!reservation.value.date) return '';
@@ -172,30 +185,59 @@ const fetchAppointments = async () => {
   } catch (e) { console.error(e); }
 };
 
-const onSlotsAvailable = async (slots: TimeSlot[]) => {
+/** Recharge les créneaux occupés puis recalcule les horaires du jour affiché. */
+const refreshSlots = async () => {
+  refreshing.value = true;
+  try {
+    await fetchAppointments();
+    calendarRef.value?.refreshSlots();
+  } finally {
+    refreshing.value = false;
+  }
+};
+
+const onSlotsAvailable = (slots: TimeSlot[]) => {
   availableSlots.value = slots;
+  // Après un rafraîchissement, un horaire déjà choisi peut avoir été pris entre-temps.
+  if (reservation.value.time && !slots.some((slot) => slot.value === reservation.value.time)) {
+    reservation.value.time = '';
+  }
+};
+
+const onDateSelect = async () => {
   reservation.value.time = '';
-  // Sur mobile, scroll vers la colonne des créneaux
+  bookingError.value = '';
+  // La liste chargée à l'ouverture de la page vieillit : on la rafraîchit à
+  // chaque changement de jour pour ne pas proposer un créneau déjà réservé.
+  await refreshSlots();
   await nextTick();
+  // Sur mobile, scroll vers la colonne des créneaux
   if (window.innerWidth < 860 && slotsColRef.value) {
     slotsColRef.value.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 };
 
 const selectTime = (val: string | null) => {
-  if (val) reservation.value.time = val;
+  if (val) {
+    reservation.value.time = val;
+    bookingError.value = '';
+  }
 };
 
 const submitReservation = async () => {
+  if (submitting.value) return;
   if (!reservation.value.date || !reservation.value.time || !service.value) {
-    alert('Veuillez choisir une date et une heure.'); return;
+    bookingError.value = 'Veuillez choisir une date et une heure.'; return;
   }
   const dt = new Date(reservation.value.date);
   const [h, m] = reservation.value.time.split(':').map(Number);
   dt.setHours(h, m);
   const user = JSON.parse(localStorage.getItem('user') || 'null');
-  if (!user?.id) { alert('Veuillez vous connecter.'); return; }
+  if (!user?.id) { bookingError.value = 'Veuillez vous connecter pour réserver.'; return; }
   const utc = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000);
+
+  submitting.value = true;
+  bookingError.value = '';
   try {
     const res = await axios.post('https://backoffice.atelier-de-marie.com/api/appointment/create', {
       date: utc.toISOString(), serviceId: service.value.id, clientId: user.id,
@@ -203,8 +245,22 @@ const submitReservation = async () => {
     if (res.data.success) {
       showDialog.value = true;
       setTimeout(() => { showDialog.value = false; router.push('/mes-rendez-vous'); }, 10000);
-    } else { alert(res.data.message || 'Une erreur est survenue.'); }
-  } catch { alert('Une erreur est survenue.'); }
+    } else {
+      bookingError.value = res.data.message || 'Une erreur est survenue.';
+    }
+  } catch (e) {
+    // 409 : le serveur a refusé le créneau, il a été pris entre l'affichage et la validation.
+    if (axios.isAxiosError(e) && e.response?.status === 409) {
+      bookingError.value = e.response.data?.message
+        || "Ce créneau vient d'être réservé. Merci d'en choisir un autre.";
+      await refreshSlots();
+    } else {
+      console.error(e);
+      bookingError.value = 'Une erreur est survenue. Merci de réessayer.';
+    }
+  } finally {
+    submitting.value = false;
+  }
 };
 
 fetchServices();
@@ -393,6 +449,24 @@ fetchAppointments();
   gap: 8px;
   margin-bottom: 28px;
 }
+/* Pendant le rechargement des créneaux occupés, on évite un clic sur une donnée périmée. */
+.slots-grid--refreshing {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.booking-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--blush);
+  border-left: 3px solid var(--taupe);
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--text-dark);
+}
 
 .slot-btn {
   width: 100%;
@@ -480,6 +554,10 @@ fetchAppointments();
   max-width: 400px;
 }
 .btn-confirm:hover { background: var(--taupe-dark); }
+.btn-confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 .btn-change {
   background: transparent;

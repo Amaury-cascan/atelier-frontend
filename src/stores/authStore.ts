@@ -66,7 +66,6 @@ export const useAuthStore = defineStore('auth', {
         const response = await axios.post(
           'https://backoffice.atelier-de-marie.com/api/signup',
           user,
-          { withCredentials: true },
         );
         this.user = response.data.user;
         return response;
@@ -175,7 +174,6 @@ export const useAuthStore = defineStore('auth', {
         const response = await axios.post(
           'https://backoffice.atelier-de-marie.com/api/forgot-password',
           { email },
-          { withCredentials: true },
         );
         return response.data;
       } catch (err: any) {
@@ -195,7 +193,6 @@ export const useAuthStore = defineStore('auth', {
         const response = await axios.patch(
           `https://backoffice.atelier-de-marie.com/api/reset-password/${token}`,
           userData,
-          { withCredentials: true },
         );
         return response.data;
       } catch {
@@ -208,9 +205,7 @@ export const useAuthStore = defineStore('auth', {
 
     async verifyEmail(token: string) {
       try {
-        await axios.get(`https://backoffice.atelier-de-marie.com/api/verify/${token}`, {
-          withCredentials: true,
-        });
+        await axios.get(`https://backoffice.atelier-de-marie.com/api/verify/${token}`);
       } catch (err) {
         this.error = "Erreur lors de la vérification de l'email.";
         throw err;

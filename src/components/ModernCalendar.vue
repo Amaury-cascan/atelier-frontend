@@ -464,6 +464,13 @@ const onTimeSelected = (selectedTime: string) => {
   closeTimeSlotsPopup();
 };
 
+// Recalcule et réémet les créneaux du jour sélectionné, après un rafraîchissement
+// de la liste des rendez-vous par le parent.
+const refreshSlots = () => {
+  if (!selectedDate.value) return;
+  emit('slots-available', getAvailableTimesForDate(selectedDate.value));
+};
+
 // Fonction pour ouvrir la popup depuis l'extérieur
 const openTimeSlotsPopup = () => {
   if (selectedDate.value) {
@@ -478,7 +485,8 @@ const openTimeSlotsPopup = () => {
 
 // Exposer la fonction pour l'utilisation parent
 defineExpose({
-  openTimeSlotsPopup
+  openTimeSlotsPopup,
+  refreshSlots
 });
 
 // Information sur la date sélectionnée

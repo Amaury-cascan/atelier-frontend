@@ -18,16 +18,18 @@ export const createGenericStore = (storeName: string, entityName: string, apiUrl
                 try {
                     const response = await axiosInstance.get(apiUrl);
                     if (Array.isArray(response.data)) {
-                        this[entityName] = response.data; // Mettre à jour la liste d'entités
+                        this[entityName] = response.data;
                     } else {
                         this[entityName] = [];
                     }
-                    return response.data;
+                    return this[entityName];
                 } catch (error) {
                     console.error(`Erreur lors de la récupération des ${entityName}`, error);
                     if (error instanceof Error) {
                         this.error = error.message;
                     }
+                    this[entityName] = [];
+                    return [];
                 } finally {
                     this.loading = false;
                 }

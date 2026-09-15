@@ -83,9 +83,9 @@
 </template>
 
 <script setup lang="ts">
-import axios from "axios";
 import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
+import axiosInstance from "@/services/api";
 
 interface Appointment {
   date: string;
@@ -96,18 +96,16 @@ const router      = useRouter();
 const appointments = ref<Appointment[]>([]);
 const loading      = ref(true);
 
-const token = localStorage.getItem('token') ?? '';
-
 // ── Fetch ──
 const fetchAppointments = async () => {
   try {
-    const response = await axios.get(
-      'https://backoffice.atelier-de-marie.com/api/appointment/user',
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    const response = await axiosInstance.get('appointment/user');
     // L'endpoint /user retourne "serviceName", on normalise en "service"
     appointments.value = (response.data.appointments ?? []).map(
-      (a: { date: string; serviceName: string }) => ({ ...a, service: a.serviceName })
+      (a: { date: string; serviceName?: string; service?: string }) => ({
+        date: a.date,
+        service: a.serviceName ?? a.service ?? '',
+      })
     );
   } catch (e) {
     console.error('Erreur récupération RDV :', e);
@@ -116,13 +114,22 @@ const fetchAppointments = async () => {
   }
 };
 
+/** Parse les dates API (`Y-m-d H:i:s` ou `Y-m-dTH:i:s`) en local sans dérive UTC. */
+const parseApptDate = (dateStr: string): Date => {
+  const normalized = dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T');
+  const [datePart, timePart = '00:00:00'] = normalized.split('T');
+  const [y, m, d] = datePart.split('-').map(Number);
+  const [hh, mm, ss] = timePart.split(':').map((v) => Number(v || 0));
+  return new Date(y, (m || 1) - 1, d || 1, hh || 0, mm || 0, ss || 0);
+};
+
 // ── Filtrage : uniquement les RDV futurs/aujourd'hui ──
 const upcomingAppointments = computed(() => {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
   return appointments.value
-    .filter((a) => new Date(a.date) >= now)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .filter((a) => parseApptDate(a.date) >= now)
+    .sort((a, b) => parseApptDate(a.date).getTime() - parseApptDate(b.date).getTime());
 });
 
 // ── Helpers date ──
@@ -131,7 +138,7 @@ const MONTHS = ['jan.', 'fév.', 'mars', 'avr.', 'mai', 'juin',
                 'juil.', 'août', 'sep.', 'oct.', 'nov.', 'déc.'];
 
 const fmt = (dateStr: string) => {
-  const d = new Date(dateStr);
+  const d = parseApptDate(dateStr);
   return {
     dayName: DAYS[d.getDay()],
     dayNum:  d.getDate(),
@@ -142,7 +149,7 @@ const fmt = (dateStr: string) => {
 };
 
 const daysUntil = (dateStr: string): number => {
-  const appt  = new Date(dateStr);
+  const appt  = parseApptDate(dateStr);
   appt.setHours(0, 0, 0, 0);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
