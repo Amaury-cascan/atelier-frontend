@@ -138,12 +138,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useServiceStore } from "@/stores/entityStore";
 import axios from 'axios';
 import ModernCalendar from "@/components/ModernCalendar.vue";
 import Dialog from 'primevue/dialog';
+import { useScheduleStore } from '@/stores/scheduleStore';
 
 interface Service {
   id: number; name: string; description: string; duration: number; price: number; picture: string;
@@ -249,10 +250,10 @@ const submitReservation = async () => {
       bookingError.value = res.data.message || 'Une erreur est survenue.';
     }
   } catch (e) {
-    // 409 : le serveur a refusé le créneau, il a été pris entre l'affichage et la validation.
-    if (axios.isAxiosError(e) && e.response?.status === 409) {
+    // 409 : créneau pris · 422 : hors horaires / bloqué
+    if (axios.isAxiosError(e) && (e.response?.status === 409 || e.response?.status === 422)) {
       bookingError.value = e.response.data?.message
-        || "Ce créneau vient d'être réservé. Merci d'en choisir un autre.";
+        || "Ce créneau n'est plus disponible. Merci d'en choisir un autre.";
       await refreshSlots();
     } else {
       console.error(e);
@@ -263,8 +264,11 @@ const submitReservation = async () => {
   }
 };
 
-fetchServices();
-fetchAppointments();
+const scheduleStore = useScheduleStore();
+
+onMounted(async () => {
+  await Promise.all([fetchServices(), fetchAppointments(), scheduleStore.fetchPublic()]);
+});
 </script>
 
 <style scoped>

@@ -75,6 +75,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
+import { bookableSlotStarts, formatMin, isOpenDate } from '@/utils/openingHours';
 import TimeSlotsPopup from './TimeSlotsPopup.vue';
 
 // Interface pour les jours du calendrier
@@ -166,97 +167,34 @@ const formatLocalDateKey = (d: Date): string => {
 // Fonction pour obtenir les créneaux disponibles pour une date
 const getAvailableTimesForDate = (date: Date): TimeSlot[] => {
   if (!props.service || !props.appointments) return [];
-  
-  const interval = 30;
-  let startHour = 9;
-  let startMinute = 30;
-  const times: TimeSlot[] = [];
+
   const now = new Date();
-  
-  const dayOfWeek = date.getDay();
-  const serviceDuration = props.service.duration;
-  
-  // Filtrer les rendez-vous pour la date sélectionnée (même jour civil local que le calendrier)
-  const selectedDateKey = formatLocalDateKey(date);
+  const duration = props.service.duration;
+  const starts = bookableSlotStarts(date, duration, 30);
   const appointmentsForSelectedDate = props.appointments.filter((appointment: any) => {
     const appointmentDate = new Date(appointment.date);
-    return formatLocalDateKey(appointmentDate) === selectedDateKey;
+    return formatLocalDateKey(appointmentDate) === formatLocalDateKey(date);
   });
-  
-  // Logique spécifique pour le 24/12/2025 et le 31/12/2025 (9h-16h uniquement)
-  // Comparer directement année, mois et jour pour éviter les problèmes de fuseau horaire
-  const dateYear = date.getFullYear();
-  const dateMonth = date.getMonth(); // 0-11 (décembre = 11)
-  const dateDay = date.getDate();
-  const isSpecialDate = (dateYear === 2025 && dateMonth === 11 && (dateDay === 24 || dateDay === 31));
-  if (isSpecialDate) {
-    startHour = 9;
-    startMinute = 0;
-  }
-  
-  // Génération des créneaux horaires
-  const maxHour = isSpecialDate ? 16 : 20;
-  for (let hour = startHour; hour <= maxHour; hour++) {
-    for (let minute = 0; minute < 60; minute += interval) {
-      let minutes = minute + startMinute;
-      
-      const time = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minutes, 0, 0);
-      const endTime = new Date(time.getTime() + serviceDuration * 60000);
-      
-      // Pour les dates spéciales (24/12 et 31/12), ignorer les restrictions de jours
-      // Seulement vérifier que le créneau ne dépasse pas 16h
-      if (isSpecialDate) {
-        if (endTime.getHours() > 16 || (endTime.getHours() === 16 && endTime.getMinutes() > 0)) {
-          continue;
-        }
-      } else {
-        // Appliquer les restrictions spécifiques aux jours
-        if (
-          // Lundi :
-          (dayOfWeek === 1 &&
-            (
-              // Exclu le rdv qui commence entre 16h et 17h30
-              (time.getHours() >= 16 && time.getHours() <= 17)
-              ||
-              // Exclu le rdv qui commence à 18h00
-              (time.getHours() === 18 && time.getMinutes() === 0)
-              ||
-              // Exclu le rdv qui commence avant 16h00 et qui fini après 16h00
-              (time.getHours() <= 16 && (endTime.getHours() > 16 || (endTime.getHours() >= 16 && endTime.getMinutes() > 0)))
-            )
-          )
-          ||
-          // Exclu le rdv qui fini après 20h00
-          (endTime.getHours() > 20)
-          ||
-          // Exclu le rdv qui fini à 20h30
-          (endTime.getHours() === 20 && endTime.getMinutes() > 0)
-          ||
-          // Exclu le rdv qui fini entre 00h00 et 09h30
-          (endTime.getHours() >= 0 && (endTime.getHours() <= 9 && endTime.getMinutes() === 0))
-          ||
-          // Exclu les rdv qui commencent après 20h
-          (time.getHours() > 20)
-        ) {
-          continue; // Exclure ce créneau s'il ne respecte pas les restrictions
-        }
-      }
-      
-      
-      // Vérifier que l'heure n'est pas dans le passé
-      if (time > now) {
-        const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const isSlotTaken = isTimeSlotTaken(timeString, appointmentsForSelectedDate, date);
-        
-        if (!isSlotTaken) {
-          times.push({ label: timeString, value: timeString });
-        }
-      }
+
+  const times: TimeSlot[] = [];
+  for (const startMin of starts) {
+    const time = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      Math.floor(startMin / 60),
+      startMin % 60,
+      0,
+      0,
+    );
+    if (time <= now) continue;
+
+    const timeString = formatMin(startMin);
+    if (!isTimeSlotTaken(timeString, appointmentsForSelectedDate, date)) {
+      times.push({ label: timeString, value: timeString });
     }
   }
-  
-  // Ne pas ajouter de faux message - si pas de créneaux, le jour sera marqué comme indisponible
-  
+
   return times;
 };
 
@@ -369,33 +307,17 @@ const calendarDays = computed((): CalendarDay[] => {
     const isToday = date.getTime() === today.getTime();
     const isPast = date < today;
     const isDisabledDay = props.disabledDays.includes(dayOfWeek);
-    
-    // Vérifier si c'est une date spéciale (24/12 ou 31/12/2025)
-    // Comparer directement année, mois et jour pour éviter les problèmes de fuseau horaire
-    const dateYear = date.getFullYear();
-    const dateMonth = date.getMonth(); // 0-11 (décembre = 11)
-    const dateDay = date.getDate();
-    const isSpecialDate = (dateYear === 2025 && dateMonth === 11 && (dateDay === 24 || dateDay === 31));
-    
-      
-    let isDateRestricted = false;
-    // Les dates spéciales ne sont jamais restreintes par les jours de la semaine
-    if (!isSpecialDate) {
-      isDateRestricted = !(dayOfWeek === 1 || dayOfWeek === 5 || dayOfWeek === 6); // Pas lundi, vendredi ou samedi
-    }
-    
-    // Pour les dates spéciales, ignorer aussi isDisabledDay (ex: mercredi peut être dans disabledDays)
-    const effectiveDisabledDay = isSpecialDate ? false : isDisabledDay;
-    
-    const isDisabled = isPast || effectiveDisabledDay || isDateRestricted || 
+    const closedBySchedule = !isOpenDate(date);
+
+    const isDisabled = isPast || isDisabledDay || closedBySchedule ||
                       (props.minDate && date < props.minDate) ||
                       (props.maxDate && date > props.maxDate);
-    
+
     const isAvailable = !isDisabled;
     const hasAvailableSlots = isAvailable ? checkAvailableSlots(date) : false;
-    const isSelected = selectedDate.value && 
+    const isSelected = selectedDate.value &&
                       date.getTime() === selectedDate.value.getTime();
-    
+
     days.push({
       day,
       date: day,

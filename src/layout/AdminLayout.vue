@@ -68,6 +68,7 @@ const drawerOpen = ref(false);
 const menu = [
   { to: '/admin', label: 'Tableau de bord', icon: 'pi pi-home' },
   { to: '/admin/calendrier', label: 'Calendrier', icon: 'pi pi-calendar' },
+  { to: '/admin/horaires', label: 'Horaires', icon: 'pi pi-clock' },
   { to: '/admin/prestations', label: 'Prestations', icon: 'pi pi-list' },
   { to: '/admin/categories', label: 'Catégories', icon: 'pi pi-tags' },
   { to: '/admin/images', label: 'Images', icon: 'pi pi-images' },

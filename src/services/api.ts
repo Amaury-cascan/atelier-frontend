@@ -24,6 +24,7 @@ const PUBLIC_API_PATHS = [
   'categories',
   'picture-presentation',
   'appointment/list',
+  'schedule',
 ];
 
 function isPublicApiRequest(url?: string): boolean {

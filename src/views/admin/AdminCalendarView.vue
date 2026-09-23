@@ -216,7 +216,7 @@
         <div class="adm-panel day-view">
           <div
             class="day-rail"
-            :style="{ height: railHeightPx + 'px' }"
+            :style="{ height: railHeightPx.value + 'px' }"
             @click="onDayRailClick"
           >
             <div
@@ -288,8 +288,8 @@
             <small v-if="d.count" class="count-pill">{{ d.count }}</small>
           </div>
         </div>
-        <div class="week-body" :style="{ ...weekGridStyle, minHeight: railHeightPx + 'px' }">
-          <div class="week-hours" :style="{ height: railHeightPx + 'px' }">
+        <div class="week-body" :style="{ ...weekGridStyle, minheight: railHeightPx.value + 'px' }">
+          <div class="week-hours" :style="{ height: railHeightPx.value + 'px' }">
             <div
               v-for="h in weekHourMarks"
               :key="h"
@@ -303,7 +303,7 @@
             class="week-col"
             :class="{ today: d.key === todayKey }"
             :data-day="d.key"
-            :style="{ height: railHeightPx + 'px' }"
+            :style="{ height: railHeightPx.value + 'px' }"
             @click="onWeekSlotClick($event, d.key)"
           >
             <div
@@ -447,6 +447,7 @@ import {
   openSlotsForDate,
   scheduleForDate,
 } from '@/utils/openingHours';
+import { useScheduleStore } from '@/stores/scheduleStore';
 import {
   addDays,
   durationMinutes,
@@ -481,6 +482,7 @@ type ClosedBand = { top: number; height: number; label: string };
 
 const toast = useToast();
 const confirm = useConfirm();
+const scheduleStore = useScheduleStore();
 
 const appointments = ref<Appt[]>([]);
 const services = ref<MetaService[]>([]);
@@ -504,13 +506,17 @@ let dragTargetAppt: Appt | null = null;
 
 const dragPreviewLabel = computed(() => {
   if (!drag.value) return '';
-  const mins = absoluteMinFromTop(drag.value.previewTop, bounds.startMin);
+  const mins = absoluteMinFromTop(drag.value.previewTop, bounds.value.startMin);
   const end = mins + drag.value.durationMin;
   return `${formatMin(mins)} – ${formatMin(end)}`;
 });
 
-const bounds = globalOpenBounds();
-const railHeightPx = (bounds.endMin - bounds.startMin) * PX_PER_MIN;
+const bounds = computed(() => {
+  void scheduleStore.loaded;
+  void scheduleStore.versions.length;
+  return globalOpenBounds();
+});
+const railHeightPx = computed(() => (bounds.value.endMin - bounds.value.startMin) * PX_PER_MIN);
 
 const weekdayShort = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
@@ -586,7 +592,7 @@ const serviceOptions = computed(() => activeServices.value.map((s) => ({ label: 
 const clientOptions = computed(() => clients.value.map((c) => ({ label: `${c.firstName} ${c.name}`, value: c.id })));
 const legendServices = computed(() => activeServices.value.slice(0, 6));
 
-const topFromMin = (mins: number) => topFromAbsoluteMin(mins, bounds.startMin);
+const topFromMin = (mins: number) => topFromAbsoluteMin(mins, bounds.value.startMin);
 
 const nowTopPx = computed(() => {
   const n = new Date(nowTick.value);
@@ -598,7 +604,7 @@ const nowClock = computed(() =>
 const nowLineVisible = (key: string) => {
   const n = new Date(nowTick.value);
   const mins = n.getHours() * 60 + n.getMinutes();
-  return key === todayKey.value && mins >= bounds.startMin && mins <= bounds.endMin;
+  return key === todayKey.value && mins >= bounds.value.startMin && mins <= bounds.value.endMin;
 };
 
 const hourMarksFromRanges = (date: Date) => {
@@ -622,7 +628,7 @@ const weekHourMarks = computed(() => {
     for (const h of hourMarksFromRanges(parseLocalDate(d.key))) marks.add(h);
   }
   if (!marks.size) {
-    for (let h = Math.floor(bounds.startMin / 60); h < Math.ceil(bounds.endMin / 60); h++) marks.add(h);
+    for (let h = Math.floor(bounds.value.startMin / 60); h < Math.ceil(bounds.value.endMin / 60); h++) marks.add(h);
   }
   return [...marks].sort((a, b) => a - b);
 });
@@ -633,12 +639,12 @@ const closedBandsForDate = (date: Date): ClosedBand[] => {
   if (sched.closed) {
     bands.push({
       top: 0,
-      height: railHeightPx,
+      height: railHeightPx.value.value,
       label: 'Fermé',
     });
     return bands;
   }
-  let cursorMin = bounds.startMin;
+  let cursorMin = bounds.value.startMin;
   for (const r of sched.ranges) {
     if (r.startMin > cursorMin) {
       bands.push({
@@ -649,10 +655,10 @@ const closedBandsForDate = (date: Date): ClosedBand[] => {
     }
     cursorMin = Math.max(cursorMin, r.endMin);
   }
-  if (cursorMin < bounds.endMin) {
+  if (cursorMin < bounds.value.endMin) {
     bands.push({
       top: topFromMin(cursorMin),
-      height: Math.max(0, (bounds.endMin - cursorMin) * PX_PER_MIN),
+      height: Math.max(0, (bounds.value.endMin - cursorMin) * PX_PER_MIN),
       label: 'Fermé',
     });
   }
@@ -883,7 +889,7 @@ const focusDay = (key: string) => {
 const defaultStartForDay = (key: string) => {
   const d = parseLocalDate(key);
   const slots = openSlotsForDate(d, 30);
-  const first = slots[0] ?? bounds.startMin;
+  const first = slots[0] ?? bounds.value.startMin;
   return minsToLocalInput(key, first);
 };
 
@@ -896,7 +902,7 @@ const onDayRailClick = (ev: MouseEvent) => {
   const el = ev.currentTarget as HTMLElement;
   const rect = el.getBoundingClientRect();
   const y = ev.clientY - rect.top;
-  let mins = absoluteMinFromTop(y, bounds.startMin);
+  let mins = absoluteMinFromTop(y, bounds.value.startMin);
   if (!isMinOpenOnDate(cursor.value, mins)) {
     toast.add({ severity: 'info', summary: 'Hors horaires', detail: 'Ce créneau n’est pas ouvert.', life: 2200 });
     return;
@@ -911,7 +917,7 @@ const onWeekSlotClick = (ev: MouseEvent, key: string) => {
   const rect = el.getBoundingClientRect();
   const y = ev.clientY - rect.top;
   const date = parseLocalDate(key);
-  let mins = absoluteMinFromTop(y, bounds.startMin);
+  let mins = absoluteMinFromTop(y, bounds.value.startMin);
   if (!isMinOpenOnDate(date, mins)) {
     toast.add({ severity: 'info', summary: 'Hors horaires', detail: 'Ce créneau n’est pas ouvert.', life: 2200 });
     return;
@@ -948,7 +954,7 @@ const onDragStart = (e: PointerEvent, a: Appt, dayKey: string) => {
     const dy = ev.clientY - drag.value.startY;
     if (Math.abs(dy) > 4) drag.value.moved = true;
 
-    const maxTop = Math.max(0, railHeightPx - Math.max(28, drag.value.durationMin * PX_PER_MIN));
+    const maxTop = Math.max(0, railHeightPx.value - Math.max(28, drag.value.durationMin * PX_PER_MIN));
     const rawTop = drag.value.originTop + dy;
     const snappedTop = snapMinutes(rawTop / PX_PER_MIN) * PX_PER_MIN;
     drag.value.previewTop = Math.max(0, Math.min(snappedTop, maxTop));
@@ -969,7 +975,7 @@ const onDragStart = (e: PointerEvent, a: Appt, dayKey: string) => {
     }
 
     const date = parseLocalDate(state.dayKey);
-    let mins2 = absoluteMinFromTop(state.previewTop, bounds.startMin);
+    let mins2 = absoluteMinFromTop(state.previewTop, bounds.value.startMin);
     mins2 = snapToOpen(date, mins2);
     if (!isMinOpenOnDate(date, mins2)) {
       toast.add({ severity: 'warn', summary: 'Hors horaires d’ouverture', life: 2800 });
@@ -1038,10 +1044,15 @@ const load = async (showSpinner = true) => {
   if (showSpinner) loading.value = true;
   error.value = '';
   try {
-    const [a, m] = await Promise.all([adminApi.listAppointments(), adminApi.appointmentsMeta()]);
+    const [a, m] = await Promise.all([
+      adminApi.listAppointments(),
+      adminApi.appointmentsMeta(),
+      scheduleStore.fetchPublic(),
+    ]);
     appointments.value = a.data.appointments;
     services.value = m.data.services;
     clients.value = m.data.clients;
+    ensureOpenCursor();
   } catch {
     error.value = 'Impossible de charger le calendrier.';
   } finally {

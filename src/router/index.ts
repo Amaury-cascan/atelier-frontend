@@ -88,6 +88,11 @@ const router = createRouter({
           component: () => import('../views/admin/AdminCalendarView.vue'),
         },
         {
+          path: 'horaires',
+          name: 'admin-horaires',
+          component: () => import('../views/admin/AdminScheduleView.vue'),
+        },
+        {
           path: 'prestations',
           name: 'admin-prestations',
           component: () => import('../views/admin/AdminServicesView.vue'),

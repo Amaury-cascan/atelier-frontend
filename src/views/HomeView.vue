@@ -272,32 +272,40 @@ const photosLoading = ref(true);
 const shuffled = (arr: Photo[]) => [...arr].sort(() => Math.random() - 0.5);
 const goToGallery = () => router.push({ name: 'photos' });
 
-import { WEEKLY_SCHEDULE } from '@/utils/openingHours';
+import { useScheduleStore } from '@/stores/scheduleStore';
+import { scheduleForJsDay } from '@/utils/openingHours';
 
-// ── Horaires (source unique : openingHours.ts) ──
+const scheduleStore = useScheduleStore();
 const todayJs = new Date().getDay();
 
-const SCHEDULE = WEEKLY_SCHEDULE.map((entry) => ({
-  day: entry.label,
-  jsDay: entry.jsDay,
-  // Affiché sur le site : Fermé / Extérieur / plages horaires
-  hours: entry.display === 'Fermé' ? null : entry.display,
-  special: entry.special,
-  isToday: entry.jsDay === todayJs,
-  display: entry.display,
-}));
+const SCHEDULE = computed(() => {
+  // Depend on store.weekly so the list refreshes after API load
+  const weekly = scheduleStore.weekly.length ? scheduleStore.weekly : null;
+  void weekly;
+  return [0, 1, 2, 3, 4, 5, 6].map((jsDay) => {
+    const entry = scheduleForJsDay(jsDay);
+    return {
+      day: entry.label,
+      jsDay,
+      hours: entry.kind === 'closed' ? null : entry.display,
+      special: entry.special,
+      isToday: jsDay === todayJs,
+      display: entry.display,
+    };
+  });
+});
 
-const todayEntry = SCHEDULE.find((e) => e.isToday)!;
+const todayEntry = computed(() => SCHEDULE.value.find((e) => e.isToday)!);
 
 const todayStatusClass = computed(() => {
-  if (!todayEntry.hours)    return 'status--closed';
-  if (todayEntry.special)   return 'status--special';
+  if (!todayEntry.value.hours) return 'status--closed';
+  if (todayEntry.value.special) return 'status--special';
   return 'status--open';
 });
 
 const todayBadgeLabel = computed(() => {
-  if (!todayEntry.hours)  return 'Fermé aujourd\'hui';
-  if (todayEntry.special) return 'Disponible aujourd\'hui';
+  if (!todayEntry.value.hours) return "Fermé aujourd'hui";
+  if (todayEntry.value.special) return 'Disponible aujourd\'hui';
   return 'Ouvert aujourd\'hui';
 });
 
@@ -324,6 +332,7 @@ onMounted(async () => {
     const [allServices, allCategories] = await Promise.all([
       serviceStore.fetchEntities(),
       categorieStore.fetchEntities(),
+      scheduleStore.fetchPublic(),
     ]);
     services.value   = allServices.filter((s: Service) => s.price > 0 && s.active !== false);
     categories.value = allCategories;
