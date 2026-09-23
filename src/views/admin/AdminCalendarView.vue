@@ -78,28 +78,37 @@
         </div>
 
         <div v-if="cursorSchedule.closed" class="adm-panel agenda-empty">
-          <p>Salon fermé ce jour. Naviguez vers un jour d’ouverture.</p>
+          <p>{{ cursorSchedule.special ? 'Prestation extérieure — pas de créneaux salon.' : 'Salon fermé ce jour.' }}</p>
           <Button label="Prochain jour ouvert" size="small" @click="goNextOpen" />
         </div>
 
-        <template v-else>
-          <ul v-if="dayAppointments.length" class="agenda-list">
-            <li
-              v-for="a in dayAppointments"
-              :key="a.id"
-              class="agenda-card"
-              :class="{ overlap: isOverlap(a) }"
-              :style="cardAccent(a.serviceId)"
-              @click="openEdit(a)"
-            >
-              <em>{{ formatTime(a.date) }} – {{ formatTime(a.endDate) }}</em>
-              <strong>{{ a.clientFirstName }} {{ a.clientName }}</strong>
-              <span>{{ a.serviceName }}</span>
-              <b>{{ a.price }} €</b>
-            </li>
-          </ul>
-          <p v-else class="agenda-empty-inline">Aucun RDV — choisissez un créneau ci-dessous.</p>
+        <ul v-if="dayAppointments.length" class="agenda-list">
+          <li
+            v-for="a in dayAppointments"
+            :key="a.id"
+            class="agenda-card"
+            :class="{ overlap: isOverlap(a) }"
+            :style="cardAccent(a.serviceId)"
+            @click="openEdit(a)"
+          >
+            <em>{{ formatTime(a.date) }} – {{ formatTime(a.endDate) }}</em>
+            <strong>{{ a.clientFirstName }} {{ a.clientName }}</strong>
+            <span>{{ a.serviceName }}</span>
+            <b>{{ a.price }} €</b>
+          </li>
+        </ul>
 
+        <div v-if="dayBlockedSlots.length" class="blocked-list adm-panel">
+          <h3 class="slots-title">Créneaux bloqués</h3>
+          <p v-for="b in dayBlockedSlots" :key="b.id" class="blocked-row">
+            <i class="pi pi-ban"></i>
+            {{ formatMin(b.startMin) }} – {{ formatMin(b.endMin) }}
+            <span>{{ b.reason || 'Bloqué' }}</span>
+          </p>
+        </div>
+
+        <template v-if="!cursorSchedule.closed">
+          <p v-if="!dayAppointments.length" class="agenda-empty-inline">Aucun RDV — choisissez un créneau ci-dessous.</p>
           <h3 class="slots-title">Créneaux d’ouverture</h3>
           <div class="slot-wrap">
             <button
@@ -123,17 +132,42 @@
         @touchstart.passive="onSwipeStart"
         @touchend.passive="onSwipeEnd"
       >
-        <section v-for="d in openWeekDays" :key="d.key" class="week-section adm-panel">
+        <section v-for="d in openWeekDays" :key="d.key" class="week-section adm-panel" :class="{ closed: d.schedule.closed }">
           <header class="week-section-head" @click="focusDay(d.key)">
             <div>
               <strong>{{ d.label }}</strong>
               <small>{{ d.schedule.display }}</small>
             </div>
             <div class="week-section-meta">
-              <span v-if="d.schedule.special" class="badge special">Extérieur</span>
-              <span class="count-chip">{{ d.count }} RDV</span>
+              <span v-if="d.schedule.closed && !d.schedule.special" class="badge closed">Fermé</span>
+              <span v-else-if="d.schedule.special" class="badge special">Extérieur</span>
+              <span v-if="!d.schedule.closed" class="count-chip">{{ d.count }} RDV</span>
             </div>
           </header>
+          <template v-if="d.schedule.closed">
+            <p class="agenda-empty-inline">{{ d.schedule.special ? 'Prestation extérieure — pas de créneaux salon.' : 'Salon fermé ce jour.' }}</p>
+            <ul v-if="d.list.length" class="agenda-list compact">
+              <li
+                v-for="a in d.list"
+                :key="a.id"
+                class="agenda-card"
+                :style="cardAccent(a.serviceId)"
+                @click="openEdit(a)"
+              >
+                <em>{{ formatTime(a.date) }}</em>
+                <strong>{{ a.clientFirstName }} {{ a.clientName }}</strong>
+                <span>{{ a.serviceName }}</span>
+              </li>
+            </ul>
+          </template>
+          <template v-else>
+          <p
+            v-for="b in d.blocks"
+            :key="'b-' + b.id"
+            class="blocked-row compact"
+          >
+            <i class="pi pi-ban"></i> {{ formatMin(b.startMin) }}–{{ formatMin(b.endMin) }} · {{ b.reason || 'Bloqué' }}
+          </p>
           <ul v-if="d.list.length" class="agenda-list compact">
             <li
               v-for="a in d.list"
@@ -152,8 +186,9 @@
           <button v-else type="button" class="add-slot-row" @click="openCreateForDay(d.key)">
             <i class="pi pi-plus"></i> Ajouter un RDV
           </button>
+          </template>
         </section>
-        <p v-if="!openWeekDays.length" class="agenda-empty-inline">Aucun jour d’ouverture cette semaine.</p>
+        <p v-if="!openWeekDays.length" class="agenda-empty-inline">Aucun jour cette semaine.</p>
       </div>
 
       <!-- Mobile MONTH -->
@@ -163,29 +198,32 @@
         @touchstart.passive="onSwipeStart"
         @touchend.passive="onSwipeEnd"
       >
-        <button
-          v-for="d in openMonthDays"
-          :key="d.key"
-          type="button"
-          class="month-row adm-panel"
-          :class="{ today: d.key === todayKey, selected: d.key === cursorKey }"
-          @click="focusDay(d.key)"
-        >
-          <div class="month-row-left">
-            <strong>{{ d.num }}</strong>
-            <div>
-              <span class="m-weekday">{{ d.label }}</span>
-              <small>{{ d.schedule.display }}</small>
-            </div>
+        <div class="month-grid-wrap adm-panel">
+          <div class="month-weekdays">
+            <span v-for="lab in monthWeekdayLabels" :key="lab">{{ lab }}</span>
           </div>
-          <div class="month-row-right">
-            <span v-if="d.schedule.special" class="badge special">Extérieur</span>
-            <span class="count-chip">{{ d.count }} RDV</span>
-            <em v-if="d.total">{{ d.total }} €</em>
-            <i class="pi pi-chevron-right chev"></i>
+          <div class="month-grid">
+            <button
+              v-for="c in monthGridCells"
+              :key="c.key"
+              type="button"
+              class="month-cell"
+              :class="{
+                muted: !c.inMonth,
+                today: c.key === todayKey,
+                selected: c.key === cursorKey,
+                closed: c.schedule.closed,
+              }"
+              @click="focusDay(c.key)"
+            >
+              <span class="m-num">{{ c.num }}</span>
+              <span v-if="c.inMonth && c.schedule.closed && !c.schedule.special" class="m-closed">Fermé</span>
+              <span v-else-if="c.inMonth && c.schedule.special" class="m-ext">Ext.</span>
+              <span v-else-if="c.inMonth && c.blocks" class="m-blocked">{{ c.blocks }} bl.</span>
+              <span v-if="c.inMonth && c.count" class="m-count">{{ c.count }}</span>
+            </button>
           </div>
-        </button>
-        <p v-if="!openMonthDays.length" class="agenda-empty-inline">Aucun jour d’ouverture ce mois.</p>
+        </div>
       </div>
     </template>
 
@@ -201,6 +239,16 @@
         <aside class="adm-panel day-side">
           <h2>Journée</h2>
           <p class="sched-line">{{ cursorSchedule.display }}</p>
+          <p v-if="cursorSchedule.closed" class="side-empty">
+            {{ cursorSchedule.special ? 'Jour extérieur.' : 'Salon fermé.' }}
+          </p>
+          <ul v-if="dayBlockedSlots.length" class="side-blocks">
+            <li v-for="b in dayBlockedSlots" :key="b.id">
+              <i class="pi pi-ban"></i>
+              {{ formatMin(b.startMin) }}–{{ formatMin(b.endMin) }}
+              <small>{{ b.reason || 'Bloqué' }}</small>
+            </li>
+          </ul>
           <ul v-if="dayAppointments.length" class="side-list">
             <li v-for="a in dayAppointments" :key="a.id" @click="openEdit(a)">
               <em :style="chipStyle(a.serviceId)">{{ formatTime(a.date) }}</em>
@@ -211,18 +259,19 @@
               <b>{{ a.price }} €</b>
             </li>
           </ul>
-          <p v-else class="side-empty">Aucun RDV — cliquez un créneau ouvert.</p>
+          <p v-else-if="!cursorSchedule.closed" class="side-empty">Aucun RDV — cliquez un créneau ouvert.</p>
         </aside>
         <div class="adm-panel day-view">
           <div
             class="day-rail"
-            :style="{ height: railHeightPx.value + 'px' }"
+            :style="{ height: railHeightPx + 'px' }"
             @click="onDayRailClick"
           >
             <div
               v-for="(band, i) in dayClosedBands"
               :key="'gap-' + i"
               class="closed-band"
+              :class="`closed-band--${band.kind}`"
               :style="{ top: band.top + 'px', height: band.height + 'px' }"
             >
               <span>{{ band.label }}</span>
@@ -255,7 +304,7 @@
               :style="eventStyle(a)"
               @pointerdown="onDragStart($event, a, cursorKey)"
             >
-              <span class="event-grip" aria-hidden="true"><i class="pi pi-bars"></i></span>
+              <span class="event-grip" aria-hidden="true" title="Glisser pour déplacer"><i class="pi pi-bars"></i></span>
               <div class="event-body">
                 <strong>{{ drag?.id === a.id ? dragPreviewLabel : `${formatTime(a.date)} – ${formatTime(a.endDate)}` }}</strong>
                 <span>{{ a.serviceName }}</span>
@@ -279,17 +328,23 @@
             v-for="d in openWeekDays"
             :key="d.key"
             class="week-day-head"
-            :class="{ today: d.key === todayKey, active: d.key === cursorKey }"
+            :class="{
+              today: d.key === todayKey,
+              active: d.key === cursorKey,
+              closed: d.schedule.closed,
+              special: d.schedule.special,
+            }"
             @click="focusDay(d.key)"
           >
             <span>{{ d.short }}</span>
             <strong>{{ d.num }}</strong>
-            <small v-if="d.schedule.special" class="ext-tag">Ext.</small>
+            <small v-if="d.schedule.closed && !d.schedule.special" class="ext-tag closed-tag">Fermé</small>
+            <small v-else-if="d.schedule.special" class="ext-tag">Ext.</small>
             <small v-if="d.count" class="count-pill">{{ d.count }}</small>
           </div>
         </div>
-        <div class="week-body" :style="{ ...weekGridStyle, minheight: railHeightPx.value + 'px' }">
-          <div class="week-hours" :style="{ height: railHeightPx.value + 'px' }">
+        <div class="week-body" :style="{ ...weekGridStyle, minHeight: railHeightPx + 'px' }">
+          <div class="week-hours" :style="{ height: railHeightPx + 'px' }">
             <div
               v-for="h in weekHourMarks"
               :key="h"
@@ -301,17 +356,21 @@
             v-for="d in openWeekDays"
             :key="d.key"
             class="week-col"
-            :class="{ today: d.key === todayKey }"
+            :class="{ today: d.key === todayKey, closed: d.schedule.closed }"
             :data-day="d.key"
-            :style="{ height: railHeightPx.value + 'px' }"
+            :style="{ height: railHeightPx + 'px' }"
             @click="onWeekSlotClick($event, d.key)"
           >
             <div
               v-for="(band, i) in closedBandsForKey(d.key)"
               :key="d.key + '-g-' + i"
               class="closed-band week"
+              :class="`closed-band--${band.kind}`"
               :style="{ top: band.top + 'px', height: band.height + 'px' }"
-            />
+              :title="band.label"
+            >
+              <span v-if="band.kind === 'blocked' || d.schedule.closed">{{ band.label }}</span>
+            </div>
             <div v-if="nowLineVisible(d.key)" class="now-line" :style="{ top: nowTopPx + 'px' }"></div>
             <div
               v-if="drag && drag.dayKey === d.key"
@@ -329,44 +388,50 @@
               :style="eventStyle(a)"
               @pointerdown="onDragStart($event, a, d.key)"
             >
-              <strong>{{ drag?.id === a.id ? dragPreviewLabel : formatTime(a.date) }}</strong>
-              <span>{{ a.clientFirstName }}</span>
-              <small>{{ a.serviceName }}</small>
+              <span class="event-grip" aria-hidden="true" title="Glisser pour déplacer"><i class="pi pi-bars"></i></span>
+              <div class="event-body">
+                <strong>{{ drag?.id === a.id ? dragPreviewLabel : formatTime(a.date) }}</strong>
+                <span>{{ a.clientFirstName }}</span>
+                <small>{{ a.serviceName }}</small>
+              </div>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- MONTH desktop : liste des jours d’ouverture (pas de grille 7 cols) -->
+      <!-- MONTH desktop -->
       <div
         v-else
-        class="agenda-mobile desktop-month"
+        class="adm-panel month-grid-wrap desktop-month"
         @touchstart.passive="onSwipeStart"
         @touchend.passive="onSwipeEnd"
       >
-        <button
-          v-for="d in openMonthDays"
-          :key="d.key"
-          type="button"
-          class="month-row adm-panel"
-          :class="{ today: d.key === todayKey, selected: d.key === cursorKey }"
-          @click="focusDay(d.key)"
-        >
-          <div class="month-row-left">
-            <strong>{{ d.num }}</strong>
-            <div>
-              <span class="m-weekday">{{ d.label }}</span>
-              <small>{{ d.schedule.display }}</small>
+        <div class="month-weekdays">
+          <span v-for="lab in monthWeekdayLabels" :key="lab">{{ lab }}</span>
+        </div>
+        <div class="month-grid">
+          <button
+            v-for="c in monthGridCells"
+            :key="c.key"
+            type="button"
+            class="month-cell"
+            :class="{
+              muted: !c.inMonth,
+              today: c.key === todayKey,
+              selected: c.key === cursorKey,
+              closed: c.schedule.closed,
+            }"
+            @click="focusDay(c.key)"
+          >
+            <span class="m-num">{{ c.num }}</span>
+            <span v-if="c.inMonth && c.schedule.closed && !c.schedule.special" class="m-closed">Fermé</span>
+            <span v-else-if="c.inMonth && c.schedule.special" class="m-ext">Ext.</span>
+            <span v-else-if="c.inMonth && c.blocks" class="m-blocked">{{ c.blocks }} bloqué{{ c.blocks > 1 ? 's' : '' }}</span>
+            <div v-if="c.inMonth && c.count" class="m-events">
+              <span class="m-count">{{ c.count }} RDV</span>
             </div>
-          </div>
-          <div class="month-row-right">
-            <span v-if="d.schedule.special" class="badge special">Extérieur</span>
-            <span class="count-chip">{{ d.count }} RDV</span>
-            <em v-if="d.total">{{ d.total }} €</em>
-            <i class="pi pi-chevron-right chev"></i>
-          </div>
-        </button>
-        <p v-if="!openMonthDays.length" class="agenda-empty-inline">Aucun jour d’ouverture ce mois.</p>
+          </button>
+        </div>
       </div>
     </template>
 
@@ -418,7 +483,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
@@ -437,13 +502,13 @@ import {
   topFromAbsoluteMin,
 } from '@/utils/agendaConstants';
 import {
+  blockedSlotsForDate,
+  daysInWeek,
   formatMin,
   globalOpenBounds,
   isOpenDate,
   isWithinOpening,
   nextOpenDate,
-  openDaysInMonth,
-  openDaysInWeek,
   openSlotsForDate,
   scheduleForDate,
 } from '@/utils/openingHours';
@@ -478,7 +543,7 @@ type DragState = {
   moved: boolean;
 };
 
-type ClosedBand = { top: number; height: number; label: string };
+type ClosedBand = { top: number; height: number; label: string; kind: 'closed' | 'pause' | 'blocked' };
 
 const toast = useToast();
 const confirm = useConfirm();
@@ -514,6 +579,8 @@ const dragPreviewLabel = computed(() => {
 const bounds = computed(() => {
   void scheduleStore.loaded;
   void scheduleStore.versions.length;
+  void scheduleStore.blockedSlots.length;
+  void scheduleStore.exceptions.length;
   return globalOpenBounds();
 });
 const railHeightPx = computed(() => (bounds.value.endMin - bounds.value.startMin) * PX_PER_MIN);
@@ -548,13 +615,13 @@ const mobileHint = computed(() => {
   if (isNarrow.value) {
     return `${periodLabel.value} · swipe ← → · horaires d’ouverture`;
   }
-  return `${periodLabel.value} · glissez un RDV · hors horaires = créneau fermé`;
+  return `${periodLabel.value} · poignée ☰ = déplacer · hors horaires = créneau fermé`;
 });
 
 const hintText = computed(() =>
   isNarrow.value
     ? 'Créneaux selon les horaires d’ouverture du salon'
-    : 'Clic = créer · Glisser = déplacer · Uniquement sur jours / heures d’ouverture',
+    : 'Clic = ouvrir · Poignée ☰ = déplacer · Uniquement sur créneaux ouverts',
 );
 
 const updateNarrow = () => {
@@ -610,7 +677,14 @@ const nowLineVisible = (key: string) => {
 const hourMarksFromRanges = (date: Date) => {
   const sched = scheduleForDate(date);
   const marks = new Set<number>();
-  for (const r of sched.ranges) {
+  const sourceRanges = sched.closed ? [] : sched.ranges;
+  if (!sourceRanges.length) {
+    for (let h = Math.floor(bounds.value.startMin / 60); h < Math.ceil(bounds.value.endMin / 60); h++) {
+      marks.add(h);
+    }
+    return [...marks].sort((a, b) => a - b);
+  }
+  for (const r of sourceRanges) {
     let h = Math.floor(r.startMin / 60);
     const endH = Math.ceil(r.endMin / 60);
     while (h < endH) {
@@ -625,6 +699,7 @@ const dayHourMarks = computed(() => hourMarksFromRanges(cursor.value));
 const weekHourMarks = computed(() => {
   const marks = new Set<number>();
   for (const d of openWeekDays.value) {
+    if (d.schedule.closed) continue;
     for (const h of hourMarksFromRanges(parseLocalDate(d.key))) marks.add(h);
   }
   if (!marks.size) {
@@ -639,8 +714,9 @@ const closedBandsForDate = (date: Date): ClosedBand[] => {
   if (sched.closed) {
     bands.push({
       top: 0,
-      height: railHeightPx.value.value,
-      label: 'Fermé',
+      height: railHeightPx.value,
+      label: sched.special ? 'Extérieur' : 'Fermé',
+      kind: 'closed',
     });
     return bands;
   }
@@ -651,6 +727,7 @@ const closedBandsForDate = (date: Date): ClosedBand[] => {
         top: topFromMin(cursorMin),
         height: Math.max(0, (r.startMin - cursorMin) * PX_PER_MIN),
         label: 'Pause',
+        kind: 'pause',
       });
     }
     cursorMin = Math.max(cursorMin, r.endMin);
@@ -660,6 +737,18 @@ const closedBandsForDate = (date: Date): ClosedBand[] => {
       top: topFromMin(cursorMin),
       height: Math.max(0, (bounds.value.endMin - cursorMin) * PX_PER_MIN),
       label: 'Fermé',
+      kind: 'closed',
+    });
+  }
+  for (const block of blockedSlotsForDate(date)) {
+    const start = Math.max(block.startMin, bounds.value.startMin);
+    const end = Math.min(block.endMin, bounds.value.endMin);
+    if (end <= start) continue;
+    bands.push({
+      top: topFromMin(start),
+      height: Math.max(0, (end - start) * PX_PER_MIN),
+      label: block.reason?.trim() || 'Bloqué',
+      kind: 'blocked',
     });
   }
   return bands.filter((b) => b.height > 4);
@@ -671,7 +760,7 @@ const closedBandsForKey = (key: string) => closedBandsForDate(parseLocalDate(key
 const isMinOpenOnDate = (date: Date, mins: number) => {
   const sched = scheduleForDate(date);
   if (sched.closed) return false;
-  return sched.ranges.some((r) => mins >= r.startMin && mins < r.endMin);
+  return sched.bookableRanges.some((r) => mins >= r.startMin && mins < r.endMin);
 };
 
 const snapToOpen = (date: Date, mins: number) => {
@@ -693,7 +782,7 @@ const snapToOpen = (date: Date, mins: number) => {
 
 const openWeekDays = computed(() => {
   const start = startOfWeek(cursor.value);
-  return openDaysInWeek(start).map((d) => {
+  return daysInWeek(start).map((d) => {
     const key = toDateKey(d);
     const list = appointmentsFor(key);
     const schedule = scheduleForDate(d);
@@ -705,6 +794,7 @@ const openWeekDays = computed(() => {
       count: list.length,
       list,
       schedule,
+      blocks: blockedSlotsForDate(d),
     };
   });
 });
@@ -713,23 +803,39 @@ const weekGridStyle = computed(() => ({
   gridTemplateColumns: `52px repeat(${Math.max(openWeekDays.value.length, 1)}, 1fr)`,
 }));
 
-const openMonthDays = computed(() => {
+/** Grille mois 7 colonnes (lun → dim). */
+const monthGridCells = computed(() => {
   const y = cursor.value.getFullYear();
   const m = cursor.value.getMonth();
-  return openDaysInMonth(y, m).map((d) => {
+  const first = new Date(y, m, 1, 12, 0, 0, 0);
+  const last = new Date(y, m + 1, 0, 12, 0, 0, 0);
+  const start = startOfWeek(first);
+  const end = addDays(startOfWeek(last), 6);
+  const cells: Array<{
+    key: string;
+    num: number;
+    inMonth: boolean;
+    schedule: ReturnType<typeof scheduleForDate>;
+    count: number;
+    blocks: number;
+  }> = [];
+  for (let d = new Date(start); d <= end; d = addDays(d, 1)) {
     const key = toDateKey(d);
-    const list = appointmentsFor(key);
-    return {
+    cells.push({
       key,
       num: d.getDate(),
-      label: d.toLocaleDateString('fr-FR', { weekday: 'short' }),
-      count: list.length,
-      list,
-      total: list.reduce((s, a) => s + (a.price || 0), 0),
+      inMonth: d.getMonth() === m,
       schedule: scheduleForDate(d),
-    };
-  });
+      count: appointmentsFor(key).length,
+      blocks: blockedSlotsForDate(d).length,
+    });
+  }
+  return cells;
 });
+
+const monthWeekdayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+
+const dayBlockedSlots = computed(() => blockedSlotsForDate(cursor.value));
 
 const dayAppointments = computed(() => appointmentsFor(cursorKey.value));
 
@@ -749,7 +855,7 @@ const freeSlots = computed(() => {
 const rangeKeys = computed(() => {
   if (view.value === 'day') return [cursorKey.value];
   if (view.value === 'week') return openWeekDays.value.map((d) => d.key);
-  return openMonthDays.value.map((d) => d.key);
+  return monthGridCells.value.filter((c) => c.inMonth).map((c) => c.key);
 });
 
 const rangeStats = computed(() => {
@@ -843,33 +949,19 @@ const outsideHoursWarning = computed(() => {
 });
 
 const ensureOpenCursor = () => {
-  if (view.value === 'day' && !isOpenDate(cursor.value)) {
-    cursor.value = nextOpenDate(cursor.value);
-  }
-};
-
-watch([view, cursor], ensureOpenCursor);
-
-const shiftOpenDay = (dir: number) => {
-  let d = addDays(cursor.value, dir);
-  for (let i = 0; i < 14; i++) {
-    if (isOpenDate(d)) {
-      cursor.value = d;
-      return;
-    }
-    d = addDays(d, dir);
-  }
+  // Ne plus forcer la navigation hors des jours fermés :
+  // l’admin doit pouvoir les consulter (RDV forcés, exceptions…).
 };
 
 const shift = (dir: number) => {
-  if (view.value === 'day') shiftOpenDay(dir);
+  if (view.value === 'day') cursor.value = addDays(cursor.value, dir);
   else if (view.value === 'week') cursor.value = addDays(cursor.value, dir * 7);
-  else cursor.value = new Date(cursor.value.getFullYear(), cursor.value.getMonth() + dir, 1);
+  else cursor.value = new Date(cursor.value.getFullYear(), cursor.value.getMonth() + dir, 1, 12);
 };
 
 const goToday = () => {
-  const t = new Date();
-  cursor.value = isOpenDate(t) ? t : nextOpenDate(t);
+  cursor.value = new Date();
+  cursor.value.setHours(12, 0, 0, 0);
 };
 
 const goNextOpen = () => {
@@ -877,12 +969,7 @@ const goNextOpen = () => {
 };
 
 const focusDay = (key: string) => {
-  const d = parseLocalDate(key);
-  if (!isOpenDate(d)) {
-    cursor.value = nextOpenDate(d);
-  } else {
-    cursor.value = d;
-  }
+  cursor.value = parseLocalDate(key);
   view.value = 'day';
 };
 
@@ -928,8 +1015,31 @@ const onWeekSlotClick = (ev: MouseEvent, key: string) => {
 
 const onDragStart = (e: PointerEvent, a: Appt, dayKey: string) => {
   if (e.button !== 0 && e.pointerType === 'mouse') return;
-  e.preventDefault();
+
+  const fromGrip = !!(e.target as HTMLElement | null)?.closest?.('.event-grip');
+
+  // Déplacement uniquement via la poignée — sinon clic = ouvrir (évite un move accidentel).
+  if (!fromGrip) {
+    const startX = e.clientX;
+    const startY = e.clientY;
+    let moved = false;
+    const onMove = (ev: PointerEvent) => {
+      if (Math.abs(ev.clientX - startX) > 8 || Math.abs(ev.clientY - startY) > 8) moved = true;
+    };
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+      if (!moved) openEdit(a);
+    };
+    window.addEventListener('pointermove', onMove, { passive: true });
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    return;
+  }
+
   e.stopPropagation();
+  e.preventDefault();
 
   const start = new Date(a.date);
   const mins = start.getHours() * 60 + start.getMinutes();
@@ -946,13 +1056,14 @@ const onDragStart = (e: PointerEvent, a: Appt, dayKey: string) => {
     moved: false,
   };
 
+  const ACTIVATE_PX = 8;
   document.body.classList.add('adm-dragging');
 
   dragMoveFn = (ev: PointerEvent) => {
     if (!drag.value) return;
     ev.preventDefault();
     const dy = ev.clientY - drag.value.startY;
-    if (Math.abs(dy) > 4) drag.value.moved = true;
+    if (Math.abs(dy) > ACTIVATE_PX) drag.value.moved = true;
 
     const maxTop = Math.max(0, railHeightPx.value - Math.max(28, drag.value.durationMin * PX_PER_MIN));
     const rawTop = drag.value.originTop + dy;
@@ -993,7 +1104,6 @@ const onDragStart = (e: PointerEvent, a: Appt, dayKey: string) => {
       price: appt.price,
     };
 
-    // Optimistic UI
     const idx = appointments.value.findIndex((x) => x.id === appt.id);
     const prev = idx >= 0 ? { ...appointments.value[idx] } : null;
     if (idx >= 0) {
@@ -1047,7 +1157,7 @@ const load = async (showSpinner = true) => {
     const [a, m] = await Promise.all([
       adminApi.listAppointments(),
       adminApi.appointmentsMeta(),
-      scheduleStore.fetchPublic(),
+      scheduleStore.fetchAdmin().catch(() => scheduleStore.fetchPublic()),
     ]);
     appointments.value = a.data.appointments;
     services.value = m.data.services;
@@ -1613,6 +1723,23 @@ onUnmounted(() => {
 .side-list span { font-size: 0.78rem; color: var(--adm-muted); }
 .side-list b { font-size: 0.85rem; color: var(--adm-accent-deep); }
 .side-empty { color: var(--adm-muted); font-size: 0.9rem; margin: 24px 0; }
+.side-blocks {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.side-blocks li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #9a3d3d;
+  flex-wrap: wrap;
+}
+.side-blocks small { color: var(--adm-muted); }
 
 .day-view, .week-view, .month-view { overflow: hidden; }
 .day-view {
@@ -1678,6 +1805,31 @@ onUnmounted(() => {
   right: 2px;
   border-radius: 4px;
 }
+.closed-band--blocked {
+  z-index: 2;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(180, 74, 74, 0.1),
+    rgba(180, 74, 74, 0.1) 6px,
+    rgba(180, 74, 74, 0.2) 6px,
+    rgba(180, 74, 74, 0.2) 12px
+  );
+}
+.closed-band--blocked span {
+  color: #9a3d3d;
+}
+.week-day-head.closed,
+.week-col.closed {
+  background: #f3f0ec;
+}
+.week-day-head .closed-tag {
+  color: var(--adm-muted);
+}
+.month-row.closed,
+.week-section.closed {
+  opacity: 0.85;
+  background: #f3f0ec;
+}
 
 .now-line {
   position: absolute;
@@ -1730,15 +1882,14 @@ onUnmounted(() => {
   position: absolute;
   left: 64px;
   right: 10px;
-  z-index: 2;
+  z-index: 4;
   border: 1px solid;
   border-left-width: 5px;
   border-radius: 14px;
   padding: 0;
   text-align: left;
-  cursor: grab;
   overflow: hidden;
-  touch-action: none;
+  touch-action: pan-y;
   user-select: none;
   box-shadow: 0 10px 28px rgba(45, 42, 38, 0.1);
   transition: box-shadow 0.18s var(--adm-ease), transform 0.18s var(--adm-ease);
@@ -1747,15 +1898,18 @@ onUnmounted(() => {
   gap: 0;
   font: inherit;
   background-clip: padding-box;
+  cursor: pointer;
 }
 .event-grip {
   display: grid;
   place-items: center;
   width: 22px;
   flex-shrink: 0;
-  opacity: 0.45;
+  opacity: 0.55;
   font-size: 0.65rem;
   border-right: 1px solid rgba(45, 42, 38, 0.08);
+  touch-action: none;
+  cursor: grab;
 }
 .event-body {
   flex: 1;
@@ -1775,6 +1929,7 @@ onUnmounted(() => {
   opacity: 0.88;
   cursor: grabbing;
   z-index: 8;
+  touch-action: none;
   transition: none !important;
   transform: scale(1.02);
   box-shadow: 0 18px 40px rgba(45, 42, 38, 0.22);
@@ -1788,7 +1943,10 @@ onUnmounted(() => {
   border-radius: 10px;
   border-left-width: 4px;
 }
-.event-block.compact .event-grip { display: none; }
+.event-block.compact .event-grip {
+  width: 18px;
+  font-size: 0.55rem;
+}
 .event-block.compact .event-body { padding: 5px 7px; }
 .event-block.compact strong { font-size: 0.7rem; }
 .event-block.compact span { font-size: 0.72rem; }
@@ -1866,14 +2024,14 @@ onUnmounted(() => {
 }
 .month-cell:hover { filter: brightness(0.98); }
 .month-cell.muted { color: #a39b93; }
-.month-cell.closed { cursor: default; background: #f3f0ec; }
+.month-cell.closed { background: #f3f0ec; }
 .month-cell.today .m-num { background: var(--adm-accent); color: #fff; }
 .month-cell.selected { outline: 2px solid var(--adm-accent); outline-offset: -2px; }
 .m-num {
   width: 28px; height: 28px; border-radius: 50%;
   display: grid; place-items: center; font-weight: 600; font-size: 0.85rem;
 }
-.m-closed, .m-ext {
+.m-closed, .m-ext, .m-blocked {
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -1881,7 +2039,33 @@ onUnmounted(() => {
   color: var(--adm-muted);
 }
 .m-ext { color: var(--adm-accent-deep); }
+.m-blocked { color: #9a3d3d; }
+.m-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--adm-accent-deep);
+}
 .m-events { display: flex; flex-direction: column; gap: 3px; }
+.month-grid-wrap { padding: 0 0 12px; overflow: hidden; }
+.blocked-list { margin-top: 12px; }
+.blocked-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 0.88rem;
+  color: #9a3d3d;
+}
+.blocked-row span { color: var(--adm-muted); font-weight: 500; }
+.blocked-row.compact {
+  font-size: 0.78rem;
+  margin: 0 0 6px;
+  padding: 0 4px;
+}
+@media (max-width: 900px) {
+  .month-cell { min-height: 72px; padding: 6px; gap: 4px; }
+  .m-num { width: 24px; height: 24px; font-size: 0.78rem; }
+}
 .m-pill {
   font-size: 0.68rem; border-radius: 6px; padding: 2px 6px; border: 1px solid;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;

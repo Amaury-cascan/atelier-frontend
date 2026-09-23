@@ -158,7 +158,8 @@ function subtractRanges(sources: TimeRange[], holes: TimeRange[]): TimeRange[] {
   return result;
 }
 
-function blocksForDate(date: Date): TimeRange[] {
+/** Plages bloquées (minutes) qui chevauchent la date civile. */
+export function blocksForDate(date: Date): TimeRange[] {
   const key = dateKey(date);
   const ranges: TimeRange[] = [];
   for (const block of snapshot.blockedSlots) {
@@ -179,6 +180,55 @@ function blocksForDate(date: Date): TimeRange[] {
     if (endMin > startMin) ranges.push({ startMin, endMin });
   }
   return ranges;
+}
+
+/** Motifs des créneaux bloqués pour une date (affichage calendrier). */
+export function blockedSlotsForDate(date: Date): Array<BlockedSlotPayload & { startMin: number; endMin: number }> {
+  const key = dateKey(date);
+  const result: Array<BlockedSlotPayload & { startMin: number; endMin: number }> = [];
+  for (const block of snapshot.blockedSlots) {
+    const start = block.start.slice(0, 10);
+    const end = block.end.slice(0, 10);
+    if (end < key || start > key) continue;
+
+    let startMin = 0;
+    let endMin = 24 * 60;
+    if (start === key) {
+      const [hh, mm] = block.start.slice(11, 16).split(':').map(Number);
+      startMin = hh * 60 + mm;
+    }
+    if (end === key) {
+      const [hh, mm] = block.end.slice(11, 16).split(':').map(Number);
+      endMin = hh * 60 + mm;
+    }
+    if (endMin > startMin) {
+      result.push({ ...block, startMin, endMin });
+    }
+  }
+  return result;
+}
+
+/** Les 7 jours de la semaine (lundi → dimanche), ouverts ou fermés. */
+export function daysInWeek(weekStart: Date): Date[] {
+  const days: Date[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    d.setHours(12, 0, 0, 0);
+    days.push(d);
+  }
+  return days;
+}
+
+/** Tous les jours civils du mois. */
+export function daysInMonth(year: number, monthIndex: number): Date[] {
+  const days: Date[] = [];
+  const d = new Date(year, monthIndex, 1, 12, 0, 0, 0);
+  while (d.getMonth() === monthIndex) {
+    days.push(new Date(d));
+    d.setDate(d.getDate() + 1);
+  }
+  return days;
 }
 
 export function scheduleForJsDay(jsDay: number): DaySchedule {
