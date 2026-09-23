@@ -27,9 +27,27 @@ const PUBLIC_API_PATHS = [
   'schedule',
 ];
 
+/** Normalise l’URL relative axios (sans query) pour un match de chemin fiable. */
+function normalizeApiPath(url?: string): string {
+  if (!url) return '';
+  return url.replace(/^\//, '').split('?')[0];
+}
+
+/**
+ * Routes anonymes uniquement.
+ * Ne jamais matcher admin/* : `schedule` ne doit pas capter `admin/schedule/...`
+ * (sinon le JWT est retiré → 401 à l’enregistrement des horaires).
+ */
 function isPublicApiRequest(url?: string): boolean {
-  if (!url) return false;
-  return PUBLIC_API_PATHS.some((path) => url.includes(path));
+  const path = normalizeApiPath(url);
+  if (!path || path.startsWith('admin/')) return false;
+
+  return PUBLIC_API_PATHS.some((publicPath) => {
+    if (publicPath.endsWith('/')) {
+      return path.startsWith(publicPath) || path.includes(`/${publicPath}`);
+    }
+    return path === publicPath || path.startsWith(`${publicPath}/`);
+  });
 }
 
 axiosInstance.interceptors.request.use(
