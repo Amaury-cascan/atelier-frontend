@@ -232,16 +232,21 @@ const submitReservation = async () => {
   }
   const dt = new Date(reservation.value.date);
   const [h, m] = reservation.value.time.split(':').map(Number);
-  dt.setHours(h, m);
   const user = JSON.parse(localStorage.getItem('user') || 'null');
   if (!user?.id) { bookingError.value = 'Veuillez vous connecter pour réserver.'; return; }
-  const utc = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000);
+  // Heure murale salon (Europe/Paris), sans conversion UTC — le back réinterprète ces digits.
+  const y = dt.getFullYear();
+  const mo = String(dt.getMonth() + 1).padStart(2, '0');
+  const day = String(dt.getDate()).padStart(2, '0');
+  const hh = String(h).padStart(2, '0');
+  const mm = String(m).padStart(2, '0');
+  const wallClock = `${y}-${mo}-${day}T${hh}:${mm}:00`;
 
   submitting.value = true;
   bookingError.value = '';
   try {
     const res = await axios.post('https://backoffice.atelier-de-marie.com/api/appointment/create', {
-      date: utc.toISOString(), serviceId: service.value.id, clientId: user.id,
+      date: wallClock, serviceId: service.value.id, clientId: user.id,
     });
     if (res.data.success) {
       showDialog.value = true;
